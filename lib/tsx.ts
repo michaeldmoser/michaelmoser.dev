@@ -14,7 +14,10 @@ export const tsxExtension = {
       this: { defaultRenderer(data: unknown): Promise<unknown> },
       data: unknown,
     ): Promise<string> {
-      return await jsxToString((await this.defaultRenderer(data)) as JSX.Element);
+      return await renderTsx(
+        (d) => this.defaultRenderer(d) as Promise<JSX.Element>,
+        data,
+      );
     };
   },
 };
