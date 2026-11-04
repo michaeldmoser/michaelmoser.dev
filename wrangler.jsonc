@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "michaelmoser-dev",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./_site"
+  },
+  "build": {
+    "command": "npm run build"
+  }
+}
