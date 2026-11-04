@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "jsx-async-runtime",
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": ["eleventy.config.ts", "lib", "src", "test"]
+}
