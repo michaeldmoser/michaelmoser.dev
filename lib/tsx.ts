@@ -6,3 +6,15 @@ export async function renderTsx<D>(
 ): Promise<string> {
   return await jsxToString(await template(data));
 }
+
+export const tsxExtension = {
+  key: "11ty.js" as const,
+  compile() {
+    return async function (
+      this: { defaultRenderer(data: unknown): Promise<unknown> },
+      data: unknown,
+    ): Promise<string> {
+      return await jsxToString((await this.defaultRenderer(data)) as JSX.Element);
+    };
+  },
+};
