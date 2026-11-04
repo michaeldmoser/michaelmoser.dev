@@ -6,4 +6,4 @@ layout: layouts/base.11ty.tsx
 
 This is the index page.
 
-The current URL is `{{ page.url }}`.
+Template syntax like `{{ page.url }}` is shown as written.
