@@ -1,5 +1,6 @@
 ---
 layout: layouts/base.11ty.tsx
+title: Michael Moser
 ---
 
 # Hello
