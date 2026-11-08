@@ -1,10 +1,10 @@
-import { html } from "jsx-async-runtime";
+import { html } from 'jsx-async-runtime'
 
 export default function base(data: { content: string; title?: string }) {
   return (
     <>
-      {html("<!doctype html>")}
-      <html lang="en">
+      {html('<!doctype html>')}
+      <html lang='en'>
         <head>
           <title>{data.title}</title>
         </head>
@@ -13,5 +13,5 @@ export default function base(data: { content: string; title?: string }) {
         </body>
       </html>
     </>
-  );
+  )
 }

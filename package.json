@@ -9,10 +9,13 @@
     "build": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts",
     "dev": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --serve",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check --error-on-warnings",
+    "format": "biome check --write"
   },
   "devDependencies": {
     "@11ty/eleventy": "~3.1.8",
+    "@biomejs/biome": "2.6.6",
     "@types/node": "^24.19.2",
     "jsx-async-runtime": "^3.0.0",
     "tsx": "^4.23.15",

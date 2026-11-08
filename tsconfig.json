@@ -8,16 +8,8 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "jsxImportSource": "jsx-async-runtime",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "skipLibCheck": true
   },
-  "include": [
-    "eleventy.config.ts",
-    "lib",
-    "src",
-    "test",
-    "types"
-  ]
+  "include": ["eleventy.config.ts", "lib", "src", "test", "types"]
 }
