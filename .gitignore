@@ -3,3 +3,4 @@ _site/
 .wrangler/
 ideas.md
 .to-issues/
+.claude/settings.local.json
