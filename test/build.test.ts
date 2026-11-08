@@ -23,18 +23,18 @@ describe("site build", () => {
     const index = results.find((result) => result.url === "/");
 
     expect(index).toBeDefined();
-    const html = index!.content;
+    const html = index?.content ?? "";
     expect(html.toLowerCase()).toContain("<!doctype html>");
     const main = html.match(/<main>([\s\S]*)<\/main>/);
     expect(main).not.toBeNull();
-    expect(main![1]).toContain("<h1");
-    expect(main![1]).not.toContain("&lt;h1");
+    expect(main?.[1]).toContain("<h1");
+    expect(main?.[1]).not.toContain("&lt;h1");
   });
 
   it("keeps a literal {{ page.url }} in the markdown verbatim instead of rendering it", () => {
     const index = results.find((result) => result.url === "/");
 
     expect(index).toBeDefined();
-    expect(index!.content).toContain("<code>{{ page.url }}</code>");
+    expect(index?.content).toContain("<code>{{ page.url }}</code>");
   });
 });

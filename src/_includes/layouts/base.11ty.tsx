@@ -4,7 +4,7 @@ export default function base(data: { content: string; title?: string }) {
   return (
     <>
       {html("<!doctype html>")}
-      <html>
+      <html lang="en">
         <head>
           <title>{data.title}</title>
         </head>

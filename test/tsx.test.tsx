@@ -7,7 +7,7 @@ interface PageData {
 }
 
 const Layout = ({ title, body }: PageData) => (
-  <html>
+  <html lang="en">
     <head>
       <title>{title}</title>
     </head>
