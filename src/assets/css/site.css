@@ -51,6 +51,12 @@
   }
 }
 
+@media print {
+  .no-print {
+    display: none;
+  }
+}
+
 body {
   color: var(--color-text);
   background-color: var(--color-bg);
