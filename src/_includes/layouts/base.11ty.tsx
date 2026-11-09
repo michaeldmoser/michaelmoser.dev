@@ -8,6 +8,10 @@ const navItems = [
   { label: 'About', href: '/about/' }
 ]
 
+const favicon = `data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='#0b57d0'/></svg>"
+)}`
+
 export default function base(data: {
   content: string
   title?: string
@@ -22,6 +26,7 @@ export default function base(data: {
           <meta name='viewport' content='width=device-width, initial-scale=1' />
           <script>{html(data.prePaintScript)}</script>
           <title>{data.title}</title>
+          <link rel='icon' type='image/svg+xml' href={favicon} />
           <link rel='stylesheet' href='/assets/css/site.css' />
           <script src='/assets/js/theme.js' defer></script>
         </head>

@@ -5,6 +5,7 @@ declare module '@11ty/eleventy' {
   }
 
   export interface UserConfig {
+    addPassthroughCopy(path: string): void
     addTemplateFormats(formats: string): void
     addGlobalData(name: string, data: () => unknown): void
     addExtension(extension: string, options: TemplateExtension): void
