@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
 import postcss from 'postcss'
 import { register } from 'tsx/esm/api'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -205,5 +206,128 @@ describe('print markers', () => {
     })
 
     expect(hidden.some((selector) => /\.no-print\b/.test(selector))).toBe(true)
+  })
+})
+
+function prePaintScript() {
+  const html = results.find((result) => result.url === '/')?.content ?? ''
+  const head = section(html, 'head')
+  const first = head.match(/<script\b([^>]*)>([\s\S]*?)<\/script>/)
+  return { head, attributes: first?.[1] ?? '', text: first?.[2] ?? '' }
+}
+
+function runPrePaintScript(storage: 'map' | 'throwing' | 'inaccessible') {
+  const attributes = new Map<string, string>()
+  const documentElement = {
+    setAttribute: (name: string, value: string) => attributes.set(name, value),
+    getAttribute: (name: string) => attributes.get(name) ?? null,
+    removeAttribute: (name: string) => attributes.delete(name)
+  }
+  const sandbox: Record<string, unknown> = {
+    document: { documentElement }
+  }
+  sandbox.window = sandbox
+  sandbox.self = sandbox
+  sandbox.globalThis = sandbox
+  if (storage === 'map') {
+    const store = new Map([['theme', 'dark']])
+    sandbox.localStorage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key)
+    }
+  } else if (storage === 'throwing') {
+    const fail = () => {
+      throw new Error('storage blocked')
+    }
+    sandbox.localStorage = {
+      getItem: fail,
+      setItem: fail,
+      removeItem: fail
+    }
+  } else {
+    Object.defineProperty(sandbox, 'localStorage', {
+      get() {
+        throw new Error('storage inaccessible')
+      }
+    })
+  }
+  const run = () =>
+    runInNewContext(prePaintScript().text, sandbox, { timeout: 1000 })
+  return { run, attributes }
+}
+
+describe('pre-paint theme script', () => {
+  it('is the first script in head, inline, and ahead of the site stylesheet', () => {
+    const { head, attributes, text } = prePaintScript()
+
+    expect(text.trim()).not.toBe('')
+    expect(attributes).not.toMatch(/\bsrc\s*=/)
+    const scriptStart = head.search(/<script\b/)
+    const stylesheetStart = head.search(
+      /<link\s+rel="stylesheet"\s+href="\/assets\/css\/site\.css"/
+    )
+    expect(stylesheetStart).toBeGreaterThan(-1)
+    expect(scriptStart).toBeGreaterThan(-1)
+    expect(scriptStart).toBeLessThan(stylesheetStart)
+    const opens = head.match(/<script\b/g) ?? []
+    const closes = head.match(/<\/script>/g) ?? []
+    expect(closes).toHaveLength(opens.length)
+  })
+
+  it('sets data-theme dark on the root when dark is stored', () => {
+    const { run, attributes } = runPrePaintScript('map')
+
+    run()
+
+    expect(attributes.get('data-theme')).toBe('dark')
+  })
+
+  it('does not throw and sets no data-theme when storage methods throw', () => {
+    const { run, attributes } = runPrePaintScript('throwing')
+
+    expect(run).not.toThrow()
+    expect(attributes.has('data-theme')).toBe(false)
+  })
+
+  it('does not throw and sets no data-theme when reading localStorage itself throws', () => {
+    const { run, attributes } = runPrePaintScript('inaccessible')
+
+    expect(run).not.toThrow()
+    expect(attributes.has('data-theme')).toBe(false)
+  })
+})
+
+describe('theme toggle script', () => {
+  it('emits a self-contained theme.js with no import or export statements', () => {
+    const script = results.find(
+      (result) => result.url === '/assets/js/theme.js'
+    )
+
+    expect(script).toBeDefined()
+    const content = script?.content ?? ''
+    expect(content.trim()).not.toBe('')
+    expect(content).not.toMatch(/^\s*import\s|\bimport\s*\(|^\s*export\s/m)
+  })
+
+  it('references theme.js with defer from the head of every built html page', () => {
+    const pages = results.filter((result) =>
+      result.outputPath.endsWith('.html')
+    )
+    expect(pages.length).toBeGreaterThan(0)
+
+    for (const page of pages) {
+      const head = section(page.content, 'head')
+      const tags = [...head.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+      const external = tags.filter((tag) =>
+        /\bsrc="\/assets\/js\/theme\.js"/.test(tag[1])
+      )
+
+      expect(external, page.outputPath).toHaveLength(1)
+      expect(external[0][1], page.outputPath).toMatch(
+        /\sdefer(?=[\s>/=]|$)(?:=(?:""|''))?/
+      )
+      expect(external[0][2].trim(), page.outputPath).toBe('')
+    }
   })
 })

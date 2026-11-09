@@ -8,7 +8,11 @@ const navItems = [
   { label: 'About', href: '/about/' }
 ]
 
-export default function base(data: { content: string; title?: string }) {
+export default function base(data: {
+  content: string
+  title?: string
+  prePaintScript: string
+}) {
   return (
     <>
       {html('<!doctype html>')}
@@ -16,8 +20,10 @@ export default function base(data: { content: string; title?: string }) {
         <head>
           <meta charset='utf-8' />
           <meta name='viewport' content='width=device-width, initial-scale=1' />
+          <script>{html(data.prePaintScript)}</script>
           <title>{data.title}</title>
           <link rel='stylesheet' href='/assets/css/site.css' />
+          <script src='/assets/js/theme.js' defer></script>
         </head>
         <body>
           <Header items={navItems} />

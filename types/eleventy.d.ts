@@ -6,6 +6,7 @@ declare module '@11ty/eleventy' {
 
   export interface UserConfig {
     addTemplateFormats(formats: string): void
+    addGlobalData(name: string, data: () => unknown): void
     addExtension(extension: string, options: TemplateExtension): void
   }
 
