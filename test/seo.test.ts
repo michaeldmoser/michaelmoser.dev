@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildScenario } from './scenario.ts'
 
@@ -415,4 +416,105 @@ describe('meta description', () => {
       )
     }
   )
+})
+
+function parsedSitemap(results?: BuildResult[]) {
+  const xml =
+    results?.find((result) => result.url === '/sitemap.xml')?.content ?? ''
+  const { urlset } = new XMLParser({
+    ignoreAttributes: false,
+    parseTagValue: false
+  }).parse(xml)
+  const entries = [urlset?.url ?? []].flat() as Record<string, string>[]
+  return { xml, urlset, entries, locs: entries.map((entry) => entry.loc) }
+}
+
+describe('sitemap', () => {
+  it('is a valid sitemaps.org urlset with absolute locs for home, the writing index, every tag page and every post', () => {
+    expect(seo.error).toBeUndefined()
+    const { xml, urlset, locs } = parsedSitemap(seo.results)
+
+    expect(xml).not.toBe('')
+    expect(XMLValidator.validate(xml)).toBe(true)
+    expect(urlset['@_xmlns']).toBe('http://www.sitemaps.org/schemas/sitemap/0.9')
+    expect(locs).toEqual(
+      expect.arrayContaining([
+        'https://michaelmoser.dev/',
+        'https://michaelmoser.dev/writing/',
+        'https://michaelmoser.dev/writing/tags/testing/',
+        'https://michaelmoser.dev/writing/first-post/',
+        'https://michaelmoser.dev/writing/second-post/',
+        'https://michaelmoser.dev/writing/hostile-post/',
+        'https://michaelmoser.dev/writing/long-title-post/',
+        'https://michaelmoser.dev/writing/diagram-post/'
+      ])
+    )
+    expect(new Set(locs).size).toBe(locs.length)
+  })
+
+  it.each([
+    ['/writing/first-post/', '2026-03-02T00:00:00Z'],
+    ['/writing/second-post/', '2026-05-15T00:00:00Z'],
+    ['/writing/diagram-post/', '2026-06-01T00:00:00Z']
+  ])('gives the post at %s a lastmod equal to its date', (url, date) => {
+    expect(seo.error).toBeUndefined()
+    const { entries } = parsedSitemap(seo.results)
+    const entry = entries.find(
+      (candidate) => candidate.loc === `https://michaelmoser.dev${url}`
+    )
+
+    expect(entry).toBeDefined()
+    expect(entry?.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/)
+    expect(Date.parse(entry?.lastmod ?? '')).toBe(Date.parse(date))
+  })
+
+  it('leaves out the 404 page and every non-HTML output', () => {
+    expect(seo.error).toBeUndefined()
+    const { locs } = parsedSitemap(seo.results)
+
+    expect(locs.length).toBeGreaterThan(0)
+    for (const loc of locs) {
+      expect(loc).toMatch(/^https:\/\/michaelmoser\.dev\/(\S*\/)?$/)
+    }
+    for (const excluded of [
+      '404',
+      'og.png',
+      'diagram.png',
+      'feed.xml',
+      'robots.txt',
+      'sitemap.xml'
+    ]) {
+      expect(locs.filter((loc) => loc.includes(excluded))).toEqual([])
+    }
+  })
+})
+
+describe('robots.txt', () => {
+  it('allows all agents and points at the sitemap', () => {
+    expect(seo.error).toBeUndefined()
+    const text = outputBytes('/robots.txt').toString('utf8')
+    const lines = text.split(/\r?\n/).map((line) => line.trim())
+
+    expect(text).not.toBe('')
+    expect(lines).toContain('User-agent: *')
+    expect(lines).toContain('Allow: /')
+    expect(lines).toContain('Sitemap: https://michaelmoser.dev/sitemap.xml')
+    expect(lines.filter((line) => /^disallow:\s*\S/i.test(line))).toEqual([])
+  })
+})
+
+describe('sitemap in a production build with a draft', () => {
+  let plain: Awaited<ReturnType<typeof buildScenario>>
+
+  beforeAll(async () => {
+    plain = await buildScenario('sitemap-draft')
+  }, 60_000)
+
+  it('lists the published post and omits the draft', () => {
+    expect(plain.error).toBeUndefined()
+    const { xml, locs } = parsedSitemap(plain.results)
+
+    expect(locs).toContain('https://michaelmoser.dev/writing/published-post/')
+    expect(xml).not.toContain('unfinished-thoughts')
+  })
 })
