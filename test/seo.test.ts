@@ -283,6 +283,49 @@ describe('Person structured data', () => {
   )
 })
 
+function outputBytes(url: string) {
+  const content: unknown = seo.results?.find(
+    (result) => result.url === url
+  )?.content
+  if (content === undefined) return Buffer.alloc(0)
+  if (typeof content === 'string') return Buffer.from(content, 'latin1')
+  return Buffer.from(content as Uint8Array)
+}
+
+describe('generated share card', () => {
+  const pngSignature = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+  ])
+
+  it.each(['first-post', 'second-post'])(
+    'builds a 1200x630 PNG at /writing/%s/og.png and points og:image at it',
+    (slug) => {
+      expect(seo.error).toBeUndefined()
+      const png = outputBytes(`/writing/${slug}/og.png`)
+
+      expect(png.length).toBeGreaterThan(24)
+      expect(png.subarray(0, 8).equals(pngSignature)).toBe(true)
+      expect(png.readUInt32BE(16)).toBe(1200)
+      expect(png.readUInt32BE(20)).toBe(630)
+      expect(
+        metaContent(headOf(`/writing/${slug}/`), 'property', 'og:image')
+      ).toBe(`https://michaelmoser.dev/writing/${slug}/og.png`)
+    }
+  )
+})
+
+describe('generated share card for a very long title', () => {
+  it('still builds a valid 1200x630 PNG for a title of about 300 characters', () => {
+    expect(seo.error).toBeUndefined()
+    const png = outputBytes('/writing/long-title-post/og.png')
+
+    expect(png.length).toBeGreaterThan(24)
+    expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
+    expect(png.readUInt32BE(16)).toBe(1200)
+    expect(png.readUInt32BE(20)).toBe(630)
+  })
+})
+
 describe('meta description', () => {
   const siteDescription =
     'Michael Moser is a Staff Software Engineer writing about building and running software.'

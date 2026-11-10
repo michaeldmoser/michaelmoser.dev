@@ -49,7 +49,9 @@ export function pageMeta(input: { site: SeoSite; page: SeoPage }): PageMeta {
       ? site.title
       : `${page.title} — ${site.title}`
   const description = describe(site, page)
-  const ogImage = `${site.url}/assets/images/og-default.png`
+  const ogImage = page.post
+    ? `${canonical}og.png`
+    : `${site.url}/assets/images/og-default.png`
   const jsonLd: string[] = []
   if (page.post) {
     jsonLd.push(
