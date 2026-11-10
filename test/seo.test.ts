@@ -143,6 +143,149 @@ describe('noindex', () => {
   })
 })
 
+function jsonLdBlocks(head: string) {
+  const scripts =
+    head.match(
+      /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
+    ) ?? []
+  return scripts.map((script) =>
+    JSON.parse(script.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, ''))
+  )
+}
+
+describe('BlogPosting structured data', () => {
+  it.each([
+    ['/writing/first-post/', 'The First Post', '2026-03-02T00:00:00Z', 'A description for the first post.'],
+    ['/writing/second-post/', 'The Second Post', '2026-05-15T00:00:00Z', 'A description for the second post.']
+  ])(
+    'gives the post at %s exactly one BlogPosting block describing it',
+    (url, title, date, description) => {
+      expect(seo.error).toBeUndefined()
+      const head = headOf(url)
+      const blocks = jsonLdBlocks(head).filter(
+        (block) => block['@type'] === 'BlogPosting'
+      )
+
+      expect(blocks).toHaveLength(1)
+      const posting = blocks[0]
+      expect(posting['@context']).toMatch(/^https?:\/\/schema\.org\/?$/)
+      expect(posting.headline).toBe(title)
+      expect(posting.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/)
+      expect(Date.parse(posting.datePublished)).toBe(Date.parse(date))
+      expect(posting.url).toBe(canonicalOf(head))
+      expect(posting.url).toBe(`https://michaelmoser.dev${url}`)
+      expect(posting.image).toBe(metaContent(head, 'property', 'og:image'))
+      expect(posting.description).toBe(description)
+      expect(posting.author).toMatchObject({
+        '@type': 'Person',
+        name: 'Michael Moser',
+        url: 'https://michaelmoser.dev'
+      })
+      expect(posting.mainEntityOfPage).toBeTruthy()
+    }
+  )
+})
+
+describe('structured data escaping', () => {
+  it('keeps script-closing and comment sequences in a title and description from escaping the JSON-LD block', () => {
+    expect(seo.error).toBeUndefined()
+    const html =
+      seo.results?.find((result) => result.url === '/writing/hostile-post/')
+        ?.content ?? ''
+    const head = headOf('/writing/hostile-post/')
+    const scripts =
+      head.match(
+        /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
+      ) ?? []
+    const bodies = scripts.map((script) =>
+      script.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '')
+    )
+
+    expect(html).not.toBe('')
+    expect(bodies.length).toBeGreaterThan(0)
+    for (const body of bodies) {
+      expect(body).not.toMatch(/<\/script/i)
+      expect(body).not.toMatch(/<!--/)
+    }
+    const posting = jsonLdBlocks(head).find(
+      (block) => block['@type'] === 'BlogPosting'
+    )
+    expect(posting?.headline).toBe('Breaking </script> and <!-- out')
+    expect(posting?.description).toBe(
+      'Ends with </SCRIPT><b>x</b> then <!-- opens a comment'
+    )
+  })
+})
+
+function topLevelNodes(head: string) {
+  return jsonLdBlocks(head).flatMap((block) =>
+    Array.isArray(block['@graph']) ? block['@graph'] : [block]
+  )
+}
+
+function personsOf(head: string) {
+  return topLevelNodes(head).filter((node) => node['@type'] === 'Person')
+}
+
+describe('Person structured data', () => {
+  it.each(['/', '/about/'])(
+    'gives %s one Person block describing Michael Moser',
+    (url) => {
+      expect(seo.error).toBeUndefined()
+      const persons = personsOf(headOf(url))
+
+      expect(persons).toHaveLength(1)
+      expect(persons[0]).toMatchObject({
+        name: 'Michael Moser',
+        jobTitle: 'Staff Software Engineer',
+        url: 'https://michaelmoser.dev',
+        sameAs: [
+          'https://www.linkedin.com/in/michaeldmoser/',
+          'https://github.com/michaeldmoser'
+        ],
+        worksFor: {
+          '@type': 'Organization',
+          name: 'Uplisting',
+          url: 'https://uplisting.io'
+        }
+      })
+      expect(persons[0]).not.toHaveProperty('image')
+    }
+  )
+
+  it.each([
+    '/writing/',
+    '/writing/first-post/',
+    '/writing/second-post/',
+    '/writing/tags/testing/',
+    '/404.html'
+  ])('gives %s no top-level Person block', (url) => {
+    expect(seo.error).toBeUndefined()
+    const head = headOf(url)
+
+    expect(head).not.toBe('')
+    expect(personsOf(head)).toEqual([])
+  })
+
+  it.each([...pageUrls, '/404.html'])(
+    'exposes no email address in the structured data or meta tags of %s',
+    (url) => {
+      expect(seo.error).toBeUndefined()
+      const head = headOf(url)
+      const scripts =
+        head.match(
+          /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
+        ) ?? []
+      const metas = head.match(/<meta\b[^>]*>/g) ?? []
+
+      expect(head).not.toBe('')
+      expect([...scripts, ...metas].join('\n')).not.toMatch(
+        /[\w.+-]+(@|%40|&#64;|&#x40;)[\w-]+\.[\w.-]+/i
+      )
+    }
+  )
+})
+
 describe('meta description', () => {
   const siteDescription =
     'Michael Moser is a Staff Software Engineer writing about building and running software.'

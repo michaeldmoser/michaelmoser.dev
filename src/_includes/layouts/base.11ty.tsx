@@ -54,6 +54,9 @@ export default function base(data: {
           <meta property='og:type' content={meta.ogType} />
           <meta property='og:site_name' content={meta.siteName} />
           <meta name='twitter:card' content={meta.twitterCard} />
+          {meta.jsonLd.map((block) => (
+            <script type='application/ld+json'>{html(block)}</script>
+          ))}
           <link rel='icon' type='image/svg+xml' href={favicon} />
           <link
             rel='alternate'
