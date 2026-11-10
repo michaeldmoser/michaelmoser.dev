@@ -1,7 +1,20 @@
 import { Resvg } from '@resvg/resvg-js'
 import satori from 'satori'
 
+import { resolveColors } from './stylesheet.ts'
+
 export const cardSize = { width: 1200, height: 630 }
+
+export type CardPalette = { background: string; text: string; accent: string }
+
+export function cardPalette(css: string): CardPalette {
+  const colors = resolveColors(css, { os: 'dark', theme: 'dark' })
+  return {
+    background: colors['--color-bg'],
+    text: colors['--color-text'],
+    accent: colors['--palette-dark-amber']
+  }
+}
 
 export type CardFonts = { regular: Buffer; bold: Buffer }
 

@@ -1,4 +1,10 @@
-export function Card(props: { title: string; siteName: string }) {
+import type { CardPalette } from '#lib/card.ts'
+
+export function Card(props: {
+  title: string
+  siteName: string
+  palette: CardPalette
+}) {
   return (
     <div
       style={{
@@ -8,8 +14,8 @@ export function Card(props: { title: string; siteName: string }) {
         width: '100%',
         height: '100%',
         padding: 80,
-        backgroundColor: '#ffffff',
-        color: '#111111',
+        backgroundColor: props.palette.background,
+        color: props.palette.text,
         fontFamily: 'Inter'
       }}
     >
@@ -23,7 +29,9 @@ export function Card(props: { title: string; siteName: string }) {
       >
         {props.title}
       </div>
-      <div style={{ display: 'flex', fontSize: 36, color: '#0b57d0' }}>
+      <div
+        style={{ display: 'flex', fontSize: 36, color: props.palette.accent }}
+      >
         {props.siteName}
       </div>
     </div>

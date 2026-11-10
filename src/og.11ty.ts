@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { renderCard } from '../lib/card.ts'
+import { cardPalette, renderCard } from '../lib/card.ts'
 import { Card } from './_includes/components/card.tsx'
+
+const palette = cardPalette(
+  readFileSync(join(import.meta.dirname, 'assets/css/site.css'), 'utf8')
+)
 
 const fontsDir = join(import.meta.dirname, '_includes/fonts')
 const fonts = {
@@ -20,7 +24,11 @@ export default class DefaultCard {
 
   async render(data: { site: { title: string; url: string } }) {
     return renderCard(
-      Card({ title: data.site.title, siteName: new URL(data.site.url).host }),
+      Card({
+        title: data.site.title,
+        siteName: new URL(data.site.url).host,
+        palette
+      }),
       fonts
     )
   }

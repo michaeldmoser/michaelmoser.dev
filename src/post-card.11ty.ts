@@ -1,8 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { CollectionItem } from '@11ty/eleventy'
-import { renderCard } from '../lib/card.ts'
+import { cardPalette, renderCard } from '../lib/card.ts'
 import { Card } from './_includes/components/card.tsx'
+
+const palette = cardPalette(
+  readFileSync(join(import.meta.dirname, 'assets/css/site.css'), 'utf8')
+)
 
 const fontsDir = join(import.meta.dirname, '_includes/fonts')
 const fonts = {
@@ -27,7 +31,11 @@ export default class PostCard {
 
   async render(data: { post: CollectionItem; site: { title: string } }) {
     return renderCard(
-      Card({ title: String(data.post.data.title), siteName: data.site.title }),
+      Card({
+        title: String(data.post.data.title),
+        siteName: data.site.title,
+        palette
+      }),
       fonts
     )
   }

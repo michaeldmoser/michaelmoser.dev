@@ -1,5 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { toSatoriNode } from '../lib/card.ts'
+import { readFileSync } from 'node:fs'
+import { cardPalette, toSatoriNode } from '../lib/card.ts'
+
+const css = readFileSync(
+  new URL('../src/assets/css/site.css', import.meta.url),
+  'utf8'
+)
+
+describe('cardPalette', () => {
+  it('uses the dark paper as background, dark ink as text and dark amber as accent from site.css', () => {
+    expect(cardPalette(css)).toEqual({
+      background: '#121212',
+      text: '#e8e8e8',
+      accent: '#f0b45c'
+    })
+  })
+
+  it('follows site.css when the dark amber changes', () => {
+    const changed = css.replace(
+      '--palette-dark-amber: #f0b45c;',
+      '--palette-dark-amber: #123456;'
+    )
+
+    expect(cardPalette(changed).accent).toBe('#123456')
+  })
+})
 
 describe('toSatoriNode', () => {
   it('converts a string child to a satori node with style and children', () => {
