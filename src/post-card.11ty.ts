@@ -18,11 +18,15 @@ export default class PostCard {
     }
   }
 
-  async render(data: { post: CollectionItem; site: { title: string } }) {
+  async render(data: {
+    post: CollectionItem
+    site: { url: string; author: { name: string } }
+  }) {
     return renderCard(
       Card({
         title: String(data.post.data.title),
-        siteName: data.site.title,
+        name: data.site.author.name,
+        domain: new URL(data.site.url).host,
         palette
       }),
       fonts

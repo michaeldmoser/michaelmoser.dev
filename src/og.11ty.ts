@@ -11,11 +11,14 @@ export default class DefaultCard {
     }
   }
 
-  async render(data: { site: { title: string; url: string } }) {
+  async render(data: {
+    site: { description: string; url: string; author: { name: string } }
+  }) {
     return renderCard(
       Card({
-        title: data.site.title,
-        siteName: new URL(data.site.url).host,
+        title: data.site.description,
+        name: data.site.author.name,
+        domain: new URL(data.site.url).host,
         palette
       }),
       fonts
