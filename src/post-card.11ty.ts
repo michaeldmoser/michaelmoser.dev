@@ -1,18 +1,7 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import type { CollectionItem } from '@11ty/eleventy'
-import { cardPalette, renderCard } from '../lib/card.ts'
+import { renderCard } from '../lib/card.ts'
+import { fonts, palette } from './_includes/card-assets.ts'
 import { Card } from './_includes/components/card.tsx'
-
-const palette = cardPalette(
-  readFileSync(join(import.meta.dirname, 'assets/css/site.css'), 'utf8')
-)
-
-const fontsDir = join(import.meta.dirname, '_includes/fonts')
-const fonts = {
-  regular: readFileSync(join(fontsDir, 'Inter-Regular.ttf')),
-  bold: readFileSync(join(fontsDir, 'Inter-Bold.ttf'))
-}
 
 export default class PostCard {
   data() {
