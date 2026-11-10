@@ -4,7 +4,22 @@ declare module '@11ty/eleventy' {
     compile(): unknown
   }
 
+  export interface CollectionItem {
+    inputPath: string
+    url: string
+    date: Date
+    data: Record<string, unknown>
+  }
+
+  export interface CollectionApi {
+    getAll(): CollectionItem[]
+  }
+
   export interface UserConfig {
+    addCollection(
+      name: string,
+      callback: (collectionApi: CollectionApi) => unknown[]
+    ): void
     addPassthroughCopy(path: string): void
     addTemplateFormats(formats: string): void
     addGlobalData(name: string, data: () => unknown): void

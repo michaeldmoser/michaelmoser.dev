@@ -1,3 +1,8 @@
+import {
+  type ListedPost,
+  PostList
+} from '../_includes/components/post-list.tsx'
+
 export default class WritingIndex {
   data() {
     return {
@@ -7,11 +12,16 @@ export default class WritingIndex {
     }
   }
 
-  render() {
+  render(data: { collections: { posts: ListedPost[] } }) {
+    const { posts } = data.collections
     return (
       <>
         <h1>Writing</h1>
-        <p>First posts coming soon</p>
+        {posts.length === 0 ? (
+          <p>First posts coming soon</p>
+        ) : (
+          <PostList posts={posts} />
+        )}
       </>
     )
   }

@@ -1,6 +1,7 @@
 import { join } from 'node:path'
-import type { UserConfig } from '@11ty/eleventy'
+import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
 import { build } from 'esbuild'
+import { checkPosts, type Vocabulary } from './lib/posts.ts'
 import { tsxExtension } from './lib/tsx.ts'
 
 async function bundleBrowserScript(entry: string): Promise<string> {
@@ -15,7 +16,55 @@ async function bundleBrowserScript(entry: string): Promise<string> {
   return result.outputFiles[0].text
 }
 
+function isWritingMarkdown(item: CollectionItem): boolean {
+  const segments = item.inputPath.split('/')
+  return item.inputPath.endsWith('.md') && segments.includes('writing')
+}
+
+function vocabularyOf(collectionApi: CollectionApi): Vocabulary {
+  return (collectionApi.getAll()[0]?.data.tagVocabulary ?? {}) as Vocabulary
+}
+
+function orderedPosts(collectionApi: CollectionApi): CollectionItem[] {
+  const writing = collectionApi.getAll().filter(isWritingMarkdown)
+  const vocabulary = vocabularyOf(collectionApi)
+  const byEntry = new Map(
+    writing.map((item) => [
+      { inputPath: item.inputPath, frontmatter: item.data },
+      item
+    ])
+  )
+  const { posts } = checkPosts([...byEntry.keys()], vocabulary, {
+    runMode: 'build',
+    env: {}
+  })
+  return posts.map((entry) => byEntry.get(entry) as CollectionItem)
+}
+
+function listedPost(item: CollectionItem) {
+  return {
+    url: item.url,
+    date: item.date,
+    data: { title: item.data.title, description: item.data.description }
+  }
+}
+
+function tagPages(collectionApi: CollectionApi) {
+  const posts = orderedPosts(collectionApi)
+  return Object.entries(vocabularyOf(collectionApi))
+    .map(([tag, label]) => ({
+      tag,
+      label,
+      posts: posts
+        .filter((post) => [post.data.tags ?? []].flat().includes(tag))
+        .map(listedPost)
+    }))
+    .filter((page) => page.posts.length > 0)
+}
+
 export default function (eleventyConfig: UserConfig) {
+  eleventyConfig.addCollection('posts', orderedPosts)
+  eleventyConfig.addCollection('tagPages', tagPages)
   eleventyConfig.addGlobalData('prePaintScript', () =>
     bundleBrowserScript('pre-paint.ts')
   )
