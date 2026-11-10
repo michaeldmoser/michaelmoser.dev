@@ -29,7 +29,11 @@ function headOf(url: string) {
   return html.match(/<head[\s>]([\s\S]*?)<\/head>/)?.[1] ?? ''
 }
 
-function metaContent(head: string, attribute: 'name' | 'property', key: string) {
+function metaContent(
+  head: string,
+  attribute: 'name' | 'property',
+  key: string
+) {
   const tags = head.match(/<meta\b[^>]*>/g) ?? []
   const tag = tags.find((candidate) =>
     new RegExp(`\\s${attribute}="${key}"`).test(candidate)
@@ -164,8 +168,18 @@ function jsonLdBlocks(head: string) {
 
 describe('BlogPosting structured data', () => {
   it.each([
-    ['/writing/first-post/', 'The First Post', '2026-03-02T00:00:00Z', 'A description for the first post.'],
-    ['/writing/second-post/', 'The Second Post', '2026-05-15T00:00:00Z', 'A description for the second post.']
+    [
+      '/writing/first-post/',
+      'The First Post',
+      '2026-03-02T00:00:00Z',
+      'A description for the first post.'
+    ],
+    [
+      '/writing/second-post/',
+      'The Second Post',
+      '2026-05-15T00:00:00Z',
+      'A description for the second post.'
+    ]
   ])(
     'gives the post at %s exactly one BlogPosting block describing it',
     (url, title, date, description) => {
@@ -179,7 +193,9 @@ describe('BlogPosting structured data', () => {
       const posting = blocks[0]
       expect(posting['@context']).toMatch(/^https?:\/\/schema\.org\/?$/)
       expect(posting.headline).toBe(title)
-      expect(posting.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/)
+      expect(posting.datePublished).toMatch(
+        /^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/
+      )
       expect(Date.parse(posting.datePublished)).toBe(Date.parse(date))
       expect(posting.url).toBe(canonicalOf(head))
       expect(posting.url).toBe(`https://michaelmoser.dev${url}`)
@@ -365,14 +381,20 @@ describe('author-supplied share image', () => {
       (block) => block['@type'] === 'BlogPosting'
     )
     const source = readFileSync(
-      join(import.meta.dirname, 'fixtures', 'seo', 'diagram-post', 'diagram.png')
+      join(
+        import.meta.dirname,
+        'fixtures',
+        'seo',
+        'diagram-post',
+        'diagram.png'
+      )
     )
 
     expect(metaContent(head, 'property', 'og:image')).toBe(imageUrl)
     expect(posting?.image).toBe(imageUrl)
-    expect(outputBytes('/writing/diagram-post/diagram.png').equals(source)).toBe(
-      true
-    )
+    expect(
+      outputBytes('/writing/diagram-post/diagram.png').equals(source)
+    ).toBe(true)
     expect(outputBytes('/writing/diagram-post/og.png').length).toBe(0)
   })
 })
@@ -436,7 +458,9 @@ describe('sitemap', () => {
 
     expect(xml).not.toBe('')
     expect(XMLValidator.validate(xml)).toBe(true)
-    expect(urlset['@_xmlns']).toBe('http://www.sitemaps.org/schemas/sitemap/0.9')
+    expect(urlset['@_xmlns']).toBe(
+      'http://www.sitemaps.org/schemas/sitemap/0.9'
+    )
     expect(locs).toEqual(
       expect.arrayContaining([
         'https://michaelmoser.dev/',
@@ -464,7 +488,9 @@ describe('sitemap', () => {
     )
 
     expect(entry).toBeDefined()
-    expect(entry?.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/)
+    expect(entry?.lastmod).toMatch(
+      /^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/
+    )
     expect(Date.parse(entry?.lastmod ?? '')).toBe(Date.parse(date))
   })
 

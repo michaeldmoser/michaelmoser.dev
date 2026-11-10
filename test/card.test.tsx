@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
 import { cardPalette, toSatoriNode } from '../lib/card.ts'
 
 const css = readFileSync(
@@ -72,7 +72,10 @@ describe('toSatoriNode', () => {
       type: 'div',
       props: {
         children: [
-          { type: 'span', props: { style: { color: 'blue' }, children: 'Montana' } },
+          {
+            type: 'span',
+            props: { style: { color: 'blue' }, children: 'Montana' }
+          },
           { type: 'b', props: { children: 'x' } }
         ]
       }

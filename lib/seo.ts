@@ -1,8 +1,8 @@
 import {
   blogPostingJsonLd,
+  type JsonLdPersonSite,
   personJsonLd,
-  serializeJsonLd,
-  type JsonLdPersonSite
+  serializeJsonLd
 } from './jsonld.ts'
 
 const personPages = ['/', '/about/']

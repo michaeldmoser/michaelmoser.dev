@@ -18,7 +18,7 @@ export function cardPalette(css: string): CardPalette {
 
 export type CardFonts = { regular: Buffer; bold: Buffer }
 
-export type SatoriChild =SatoriNode | string | number
+export type SatoriChild = SatoriNode | string | number
 
 export interface SatoriNode {
   type: string
@@ -34,13 +34,24 @@ interface JsxElement {
 }
 
 function isJsxElement(value: unknown): value is JsxElement {
-  return typeof value === 'object' && value !== null && 'tag' in value && 'props' in value
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'tag' in value &&
+    'props' in value
+  )
 }
 
 function convertChildren(children: unknown): SatoriChild[] {
   if (Array.isArray(children)) return children.flatMap(convertChildren)
-  if (children === null || children === undefined || typeof children === 'boolean') return []
-  if (typeof children === 'string' || typeof children === 'number') return [children]
+  if (
+    children === null ||
+    children === undefined ||
+    typeof children === 'boolean'
+  )
+    return []
+  if (typeof children === 'string' || typeof children === 'number')
+    return [children]
   return [toSatoriNode(children)]
 }
 
