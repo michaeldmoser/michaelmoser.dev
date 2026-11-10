@@ -34,10 +34,13 @@ function orderedPosts(collectionApi: CollectionApi): CollectionItem[] {
       item
     ])
   )
-  const { posts } = checkPosts([...byEntry.keys()], vocabulary, {
+  const { posts, violations } = checkPosts([...byEntry.keys()], vocabulary, {
     runMode: 'build',
     env: {}
   })
+  if (violations.length > 0) {
+    throw new Error(`Invalid posts:\n${violations.join('\n')}`)
+  }
   return posts.map((entry) => byEntry.get(entry) as CollectionItem)
 }
 

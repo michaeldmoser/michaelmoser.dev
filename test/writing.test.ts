@@ -209,6 +209,55 @@ function tagPage(tag: string) {
   }
 }
 
+function failureText(error: Error | undefined) {
+  const parts: string[] = []
+  let current: unknown = error
+  while (current instanceof Error) {
+    parts.push(current.message)
+    current = current.cause
+  }
+  return parts.join('\n')
+}
+
+describe('build validation failures', () => {
+  it('fails the build naming the post and the field when a post has no date', async () => {
+    const outcome = await buildScenario('missing-field')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('lacking-post')
+    expect(text).toMatch(/\bdate\b/)
+    expect(text).not.toContain('complete-post')
+  }, 60_000)
+
+  it('fails the build naming both posts when two folders share a slug', async () => {
+    const outcome = await buildScenario('duplicate-slug')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('Foo/index.md')
+    expect(text).toContain('foo/index.md')
+  }, 60_000)
+
+  it('fails the build naming a markdown file that is not a post folder index', async () => {
+    const outcome = await buildScenario('stray-file')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('stray-note.md')
+    expect(text).not.toContain('real-post')
+  }, 60_000)
+
+  it('fails the build naming the post and the tag when a tag is not in the vocabulary', async () => {
+    const outcome = await buildScenario('unknown-tag')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('mystery-post')
+    expect(text).toContain('not-in-vocabulary')
+  }, 60_000)
+})
+
 describe('tag pages', () => {
   it('lists exactly the engineering-leadership posts newest-first under its label heading', () => {
     expect(valid.error).toBeUndefined()
