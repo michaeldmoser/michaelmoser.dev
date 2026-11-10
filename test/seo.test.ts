@@ -143,14 +143,20 @@ describe('noindex', () => {
   })
 })
 
-function jsonLdBlocks(head: string) {
-  const scripts =
+function jsonLdScripts(head: string) {
+  return (
     head.match(
       /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
     ) ?? []
-  return scripts.map((script) =>
-    JSON.parse(script.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, ''))
   )
+}
+
+function scriptBody(script: string) {
+  return script.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '')
+}
+
+function jsonLdBlocks(head: string) {
+  return jsonLdScripts(head).map((script) => JSON.parse(scriptBody(script)))
 }
 
 describe('BlogPosting structured data', () => {
@@ -193,13 +199,7 @@ describe('structured data escaping', () => {
       seo.results?.find((result) => result.url === '/writing/hostile-post/')
         ?.content ?? ''
     const head = headOf('/writing/hostile-post/')
-    const scripts =
-      head.match(
-        /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
-      ) ?? []
-    const bodies = scripts.map((script) =>
-      script.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '')
-    )
+    const bodies = jsonLdScripts(head).map(scriptBody)
 
     expect(html).not.toBe('')
     expect(bodies.length).toBeGreaterThan(0)
@@ -272,10 +272,7 @@ describe('Person structured data', () => {
     (url) => {
       expect(seo.error).toBeUndefined()
       const head = headOf(url)
-      const scripts =
-        head.match(
-          /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g
-        ) ?? []
+      const scripts = jsonLdScripts(head)
       const metas = head.match(/<meta\b[^>]*>/g) ?? []
 
       expect(head).not.toBe('')
