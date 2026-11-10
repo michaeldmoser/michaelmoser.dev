@@ -3,5 +3,12 @@
   "title": "Michael Moser",
   "feedTitle": "Michael Moser — Writing",
   "author": { "name": "Michael Moser" },
-  "feedUpdatedFallback": "2026-01-01T00:00:00Z"
+  "feedUpdatedFallback": "2026-01-01T00:00:00Z",
+  "description": "Michael Moser is a Staff Software Engineer writing about building and running software.",
+  "jobTitle": "Staff Software Engineer",
+  "sameAs": [
+    "https://www.linkedin.com/in/michaeldmoser/",
+    "https://github.com/michaeldmoser"
+  ],
+  "worksFor": { "name": "Uplisting", "url": "https://uplisting.io" }
 }
