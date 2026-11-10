@@ -12,7 +12,7 @@ interface PostData {
 
 export default class PostLayout {
   data() {
-    return { layout: 'layouts/base.11ty.tsx' }
+    return { layout: 'layouts/base.11ty.tsx', isPost: true }
   }
 
   render(data: PostData) {

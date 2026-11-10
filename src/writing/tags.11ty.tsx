@@ -17,6 +17,7 @@ export default class TagPageTemplate {
       permalink: (data: { tagPage: TagPage }) =>
         `/writing/tags/${data.tagPage.tag}/`,
       eleventyComputed: {
+        tagLabel: (data: { tagPage: TagPage }) => data.tagPage.label,
         title: (data: { tagPage: TagPage }) =>
           `Posts tagged ${data.tagPage.label}`
       }

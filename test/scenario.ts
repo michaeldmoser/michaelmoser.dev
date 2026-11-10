@@ -47,6 +47,10 @@ function assemble(name: string) {
   cpSync(join(root, 'src'), scenarioDir, { recursive: true })
   mkdirSync(join(scenarioDir, 'writing'), { recursive: true })
   for (const entry of readdirSync(fixtureDir)) {
+    if (entry === '_root') {
+      cpSync(join(fixtureDir, entry), scenarioDir, { recursive: true })
+      continue
+    }
     const target = entry === '_data' ? '_data' : join('writing', entry)
     cpSync(join(fixtureDir, entry), join(scenarioDir, target), {
       recursive: true

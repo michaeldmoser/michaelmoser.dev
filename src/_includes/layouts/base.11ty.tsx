@@ -1,4 +1,5 @@
 import { html } from 'jsx-async-runtime'
+import { pageMeta, type SeoSite } from '#lib/seo.ts'
 import { Footer } from '../components/footer.tsx'
 import { Header } from '../components/header.tsx'
 
@@ -15,9 +16,25 @@ const favicon = `data:image/svg+xml,${encodeURIComponent(
 export default function base(data: {
   content: string
   title?: string
+  description?: string
+  tagLabel?: string
+  noindex?: boolean
+  isPost?: boolean
+  page: { url: string; date: Date }
   prePaintScript: string
-  site: { feedTitle: string }
+  site: SeoSite & { feedTitle: string }
 }) {
+  const meta = pageMeta({
+    site: data.site,
+    page: {
+      url: data.page.url,
+      title: data.title,
+      description: data.description,
+      tagLabel: data.tagLabel,
+      noindex: data.noindex,
+      post: data.isPost ? { date: data.page.date } : undefined
+    }
+  })
   return (
     <>
       {html('<!doctype html>')}
@@ -26,7 +43,17 @@ export default function base(data: {
           <meta charset='utf-8' />
           <meta name='viewport' content='width=device-width, initial-scale=1' />
           <script>{html(data.prePaintScript)}</script>
-          <title>{data.title}</title>
+          <title>{meta.title}</title>
+          <meta name='description' content={meta.description} />
+          {meta.noindex ? <meta name='robots' content='noindex' /> : null}
+          <link rel='canonical' href={meta.canonical} />
+          <meta property='og:title' content={meta.ogTitle} />
+          <meta property='og:description' content={meta.description} />
+          <meta property='og:url' content={meta.canonical} />
+          <meta property='og:image' content={meta.ogImage} />
+          <meta property='og:type' content={meta.ogType} />
+          <meta property='og:site_name' content={meta.siteName} />
+          <meta name='twitter:card' content={meta.twitterCard} />
           <link rel='icon' type='image/svg+xml' href={favicon} />
           <link
             rel='alternate'
