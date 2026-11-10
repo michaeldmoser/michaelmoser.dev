@@ -16,6 +16,7 @@ export default function base(data: {
   content: string
   title?: string
   prePaintScript: string
+  site: { feedTitle: string }
 }) {
   return (
     <>
@@ -27,6 +28,12 @@ export default function base(data: {
           <script>{html(data.prePaintScript)}</script>
           <title>{data.title}</title>
           <link rel='icon' type='image/svg+xml' href={favicon} />
+          <link
+            rel='alternate'
+            type='application/atom+xml'
+            href='/feed.xml'
+            title={data.site.feedTitle}
+          />
           <link rel='stylesheet' href='/assets/css/site.css' />
           <script src='/assets/js/theme.js' defer></script>
         </head>

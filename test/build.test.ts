@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
+import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import postcss from 'postcss'
 import { register } from 'tsx/esm/api'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -295,6 +296,95 @@ describe('pre-paint theme script', () => {
 
     expect(run).not.toThrow()
     expect(attributes.has('data-theme')).toBe(false)
+  })
+})
+
+describe('writing index with no posts', () => {
+  it('tells the reader the first posts are coming soon', () => {
+    const page = results.find((result) => result.url === '/writing/')
+
+    expect(page).toBeDefined()
+    const main = page?.content.match(/<main[\s>]([\s\S]*)<\/main>/)
+    expect(main).not.toBeNull()
+    const text = (main?.[1] ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    expect(text).toContain('First posts coming soon')
+  })
+
+  it('builds no page under /writing/ other than the index', () => {
+    const others = results
+      .filter((result) => result.url.startsWith('/writing/'))
+      .map((result) => result.url)
+      .filter((url) => url !== '/writing/')
+
+    expect(others).toEqual([])
+  })
+})
+
+describe('atom feed with no posts', () => {
+  const feedXml = () =>
+    results.find((result) => result.url === '/feed.xml')?.content ?? ''
+
+  it('is a well-formed feed with the required elements, a name-only author and no entries', () => {
+    const xml = feedXml()
+
+    expect(xml).not.toBe('')
+    expect(XMLValidator.validate(xml)).toBe(true)
+    const { feed } = new XMLParser({
+      ignoreAttributes: false,
+      parseTagValue: false
+    }).parse(xml)
+    expect(feed['@_xmlns']).toBe('http://www.w3.org/2005/Atom')
+    expect(feed.id).toBe('https://michaelmoser.dev/feed.xml')
+    expect(feed.title).toBe('Michael Moser — Writing')
+    expect(feed.author.name).toBe('Michael Moser')
+    expect(feed.author.email).toBeUndefined()
+    expect(feed.entry).toBeUndefined()
+    expect(xml).not.toContain('<email')
+  })
+
+  it('carries a valid RFC 3339 updated date', () => {
+    const { feed } = new XMLParser({ parseTagValue: false }).parse(feedXml())
+
+    expect(feed.updated).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+    expect(Number.isNaN(new Date(feed.updated).getTime())).toBe(false)
+  })
+
+  it('is byte-identical across two independent builds', async () => {
+    const { default: Eleventy } = await import('@11ty/eleventy')
+    const second = await new Eleventy('src', '_site', {
+      configPath: 'eleventy.config.ts'
+    }).toJSON()
+    const secondXml =
+      second.find((result: BuildResult) => result.url === '/feed.xml')
+        ?.content ?? ''
+
+    expect(feedXml()).not.toBe('')
+    expect(secondXml).toBe(feedXml())
+  }, 60_000)
+})
+
+function attributeValue(tag: string, name: string) {
+  return tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1]
+}
+
+describe('feed autodiscovery', () => {
+  it('links the atom feed from the head of every built html page', () => {
+    const pages = results.filter((result) =>
+      result.outputPath.endsWith('.html')
+    )
+    expect(pages.length).toBeGreaterThan(0)
+
+    for (const page of pages) {
+      const head = section(page.content, 'head')
+      const feedLinks = (head.match(/<link\b[^>]*>/g) ?? []).filter(
+        (tag) =>
+          attributeValue(tag, 'rel') === 'alternate' &&
+          attributeValue(tag, 'type') === 'application/atom+xml' &&
+          attributeValue(tag, 'href') === '/feed.xml'
+      )
+
+      expect(feedLinks, page.outputPath).toHaveLength(1)
+    }
   })
 })
 
