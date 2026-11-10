@@ -55,6 +55,25 @@ function convertChildren(children: unknown): SatoriChild[] {
   return [toSatoriNode(children)]
 }
 
+function camelCase(property: string): string {
+  return property.replace(/-([a-z])/g, (_, letter: string) =>
+    letter.toUpperCase()
+  )
+}
+
+function parseStyle(style: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  for (const declaration of style.split(';')) {
+    const separator = declaration.indexOf(':')
+    if (separator === -1) continue
+    const property = declaration.slice(0, separator).trim()
+    const value = declaration.slice(separator + 1).trim()
+    if (property === '' || value === '') continue
+    result[camelCase(property)] = value
+  }
+  return result
+}
+
 export function toSatoriNode(element: unknown): SatoriNode {
   if (!isJsxElement(element)) {
     throw new TypeError('toSatoriNode expects a JSX element')
@@ -66,7 +85,7 @@ export function toSatoriNode(element: unknown): SatoriNode {
   const { style, children } = element.props
   const converted = convertChildren(children)
   const props: SatoriNode['props'] = {}
-  if (style !== undefined) props.style = style as Record<string, unknown>
+  if (style !== undefined) props.style = parseStyle(String(style))
   if (converted.length === 1) props.children = converted[0]
   else if (converted.length > 1) props.children = converted
   return { type: element.tag, props }
