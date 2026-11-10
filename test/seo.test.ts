@@ -328,6 +328,31 @@ describe('generated share card for a very long title', () => {
   })
 })
 
+describe('default site share card', () => {
+  it.each(['/', '/writing/', '/writing/tags/testing/', '/about/', '/404.html'])(
+    'points og:image on %s at the default site card',
+    (url) => {
+      expect(seo.error).toBeUndefined()
+      const head = headOf(url)
+
+      expect(head).not.toBe('')
+      expect(metaContent(head, 'property', 'og:image')).toBe(
+        'https://michaelmoser.dev/og.png'
+      )
+    }
+  )
+
+  it('builds /og.png as a 1200x630 PNG', () => {
+    expect(seo.error).toBeUndefined()
+    const png = outputBytes('/og.png')
+
+    expect(png.length).toBeGreaterThan(24)
+    expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
+    expect(png.readUInt32BE(16)).toBe(1200)
+    expect(png.readUInt32BE(20)).toBe(630)
+  })
+})
+
 describe('author-supplied share image', () => {
   const url = '/writing/diagram-post/'
   const imageUrl = 'https://michaelmoser.dev/writing/diagram-post/diagram.png'
