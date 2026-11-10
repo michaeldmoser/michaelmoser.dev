@@ -4,3 +4,5 @@ _site/
 ideas.md
 .to-issues/
 .claude/settings.local.json
+.dev-site/
+test/.scenarios/
