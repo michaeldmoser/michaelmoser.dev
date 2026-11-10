@@ -13,7 +13,13 @@ const fonts = {
 export default class PostCard {
   data() {
     return {
-      pagination: { data: 'collections.posts', size: 1, alias: 'post' },
+      pagination: {
+        data: 'collections.posts',
+        size: 1,
+        alias: 'post',
+        before: (posts: CollectionItem[]) =>
+          posts.filter((post) => !post.data.ogImage)
+      },
       permalink: (data: { post: CollectionItem }) => `${data.post.url}og.png`,
       eleventyExcludeFromCollections: true
     }

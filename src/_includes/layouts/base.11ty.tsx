@@ -20,6 +20,7 @@ export default function base(data: {
   tagLabel?: string
   noindex?: boolean
   isPost?: boolean
+  ogImage?: string
   page: { url: string; date: Date }
   prePaintScript: string
   site: SeoSite & { feedTitle: string }
@@ -32,7 +33,9 @@ export default function base(data: {
       description: data.description,
       tagLabel: data.tagLabel,
       noindex: data.noindex,
-      post: data.isPost ? { date: data.page.date } : undefined
+      post: data.isPost
+        ? { date: data.page.date, ogImage: data.ogImage }
+        : undefined
     }
   })
   return (

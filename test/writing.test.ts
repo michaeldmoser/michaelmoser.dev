@@ -256,6 +256,26 @@ describe('build validation failures', () => {
     expect(text).toContain('mystery-post')
     expect(text).toContain('not-in-vocabulary')
   }, 60_000)
+
+  it('fails the build naming the post and ogImage when the image file is missing', async () => {
+    const outcome = await buildScenario('og-image-missing')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('Invalid posts')
+    expect(text).toContain('ghost-image-post')
+    expect(text).toMatch(/ogImage/)
+  }, 60_000)
+
+  it('fails the build naming the post and ogImage when the image is not a png or jpg', async () => {
+    const outcome = await buildScenario('og-image-gif')
+
+    expect(outcome.error).toBeDefined()
+    const text = failureText(outcome.error)
+    expect(text).toContain('Invalid posts')
+    expect(text).toContain('animated-post')
+    expect(text).toMatch(/ogImage/)
+  }, 60_000)
 })
 
 describe('drafts in a CI build', () => {

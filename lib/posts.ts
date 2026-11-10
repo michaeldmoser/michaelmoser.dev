@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+
 export type PostEntry = {
   inputPath: string
   frontmatter: Record<string, unknown>
@@ -45,6 +48,25 @@ function tagViolations(entry: PostEntry, vocabulary: Vocabulary): string[] {
   return normalizeTags(entry.frontmatter.tags)
     .filter((tag) => typeof tag !== 'string' || !Object.hasOwn(vocabulary, tag))
     .map((tag) => `${entry.inputPath}: unknown tag "${String(tag)}"`)
+}
+
+const OG_IMAGE_EXTENSION = /\.(png|jpg)$/i
+
+function ogImageViolations(
+  entry: PostEntry,
+  fileExists: (path: string) => boolean
+): string[] {
+  const ogImage = entry.frontmatter.ogImage
+  if (ogImage === undefined) {
+    return []
+  }
+  if (typeof ogImage !== 'string' || !OG_IMAGE_EXTENSION.test(ogImage)) {
+    return [`${entry.inputPath}: ogImage must be a .png or .jpg file`]
+  }
+  if (!fileExists(join(dirname(entry.inputPath), ogImage))) {
+    return [`${entry.inputPath}: ogImage file "${ogImage}" does not exist`]
+  }
+  return []
 }
 
 function postTime(entry: PostEntry): number {
@@ -113,7 +135,8 @@ function isDraft(entry: PostEntry): boolean {
 export function checkPosts(
   entries: PostEntry[],
   vocabulary: Vocabulary,
-  context: RunContext
+  context: RunContext,
+  fileExists: (path: string) => boolean = existsSync
 ): { posts: PostEntry[]; violations: string[]; warnings: string[] } {
   const invalid = new Set<PostEntry>()
   const violations: string[] = []
@@ -121,7 +144,8 @@ export function checkPosts(
     const entryViolations = [
       ...locationViolations(entry),
       ...requiredFieldViolations(entry),
-      ...tagViolations(entry, vocabulary)
+      ...tagViolations(entry, vocabulary),
+      ...ogImageViolations(entry, fileExists)
     ]
     if (entryViolations.length > 0) {
       invalid.add(entry)

@@ -17,7 +17,7 @@ export type SeoPage = {
   description?: string
   tagLabel?: string
   noindex?: boolean
-  post?: { date: Date }
+  post?: { date: Date; ogImage?: string }
 }
 
 export type PageMeta = {
@@ -50,7 +50,7 @@ export function pageMeta(input: { site: SeoSite; page: SeoPage }): PageMeta {
       : `${page.title} — ${site.title}`
   const description = describe(site, page)
   const ogImage = page.post
-    ? `${canonical}og.png`
+    ? `${canonical}${page.post.ogImage ?? 'og.png'}`
     : `${site.url}/assets/images/og-default.png`
   const jsonLd: string[] = []
   if (page.post) {

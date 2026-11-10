@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildScenario } from './scenario.ts'
 
@@ -323,6 +325,29 @@ describe('generated share card for a very long title', () => {
     expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a')
     expect(png.readUInt32BE(16)).toBe(1200)
     expect(png.readUInt32BE(20)).toBe(630)
+  })
+})
+
+describe('author-supplied share image', () => {
+  const url = '/writing/diagram-post/'
+  const imageUrl = 'https://michaelmoser.dev/writing/diagram-post/diagram.png'
+
+  it('points og:image and BlogPosting.image at the post image, copies it byte for byte and generates no og.png', () => {
+    expect(seo.error).toBeUndefined()
+    const head = headOf(url)
+    const posting = jsonLdBlocks(head).find(
+      (block) => block['@type'] === 'BlogPosting'
+    )
+    const source = readFileSync(
+      join(import.meta.dirname, 'fixtures', 'seo', 'diagram-post', 'diagram.png')
+    )
+
+    expect(metaContent(head, 'property', 'og:image')).toBe(imageUrl)
+    expect(posting?.image).toBe(imageUrl)
+    expect(outputBytes('/writing/diagram-post/diagram.png').equals(source)).toBe(
+      true
+    )
+    expect(outputBytes('/writing/diagram-post/og.png').length).toBe(0)
   })
 })
 
