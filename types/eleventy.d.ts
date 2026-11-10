@@ -1,7 +1,7 @@
 declare module '@11ty/eleventy' {
   export interface TemplateExtension {
     key: string
-    compile(): unknown
+    compile?(): unknown
   }
 
   export interface CollectionItem {

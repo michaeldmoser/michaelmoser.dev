@@ -106,6 +106,8 @@ export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addPassthroughCopy('src/assets/css')
   eleventyConfig.addTemplateFormats('11ty.tsx')
   eleventyConfig.addExtension('11ty.tsx', tsxExtension)
+  eleventyConfig.addTemplateFormats('11ty.ts')
+  eleventyConfig.addExtension('11ty.ts', { key: '11ty.js' })
   return {
     markdownTemplateEngine: false
   }
