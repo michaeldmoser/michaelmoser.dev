@@ -5,9 +5,12 @@
   "engines": {
     "node": ">=24 <25"
   },
+  "imports": {
+    "#lib/*": "./lib/*"
+  },
   "scripts": {
-    "build": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts",
-    "dev": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --serve --output=.dev-site",
+    "build": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --input=src",
+    "dev": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --input=src --serve --output=.dev-site",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "biome check --error-on-warnings",

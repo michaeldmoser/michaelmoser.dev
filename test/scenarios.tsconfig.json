@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "../eleventy.config.ts",
+    "../lib",
+    "../src",
+    "../test",
+    "../types",
+    ".scenarios/**/*"
+  ]
+}
