@@ -3,6 +3,7 @@ import { formatPostDate, isoDate } from '#lib/dates.ts'
 
 interface PostData {
   title: string
+  draft?: boolean
   content: string
   page: { date: Date }
   tags?: string[]
@@ -19,6 +20,7 @@ export default class PostLayout {
     return (
       <article>
         <h1>{data.title}</h1>
+        {data.draft === true ? <p>Draft</p> : null}
         <p>
           <time datetime={isoDate(date)}>{formatPostDate(date)}</time>
         </p>

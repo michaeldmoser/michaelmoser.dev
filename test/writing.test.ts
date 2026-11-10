@@ -258,6 +258,131 @@ describe('build validation failures', () => {
   }, 60_000)
 })
 
+describe('drafts in a CI build', () => {
+  it.each(['CI', 'WORKERS_CI'])(
+    'fails the build naming the draft when %s is set',
+    async (variable) => {
+      const outcome = await buildScenario('draft', { env: { [variable]: '1' } })
+
+      expect(outcome.error).toBeDefined()
+      const text = failureText(outcome.error)
+      expect(text).toContain('unfinished-thoughts')
+      expect(text).not.toContain('published-post')
+    },
+    60_000
+  )
+})
+
+describe('drafts in a plain production build', () => {
+  let plain: Awaited<ReturnType<typeof buildScenario>>
+
+  beforeAll(async () => {
+    plain = await buildScenario('draft')
+  }, 60_000)
+
+  const pageAt = (url: string) =>
+    plain.results?.find((result) => result.url === url)
+
+  it('succeeds and warns naming the draft', () => {
+    expect(plain.error).toBeUndefined()
+    expect(plain.warnings.some((w) => w.includes('unfinished-thoughts'))).toBe(
+      true
+    )
+    expect(plain.warnings.some((w) => w.includes('published-post'))).toBe(false)
+  })
+
+  it('writes no page for the draft but still writes the published post', () => {
+    expect(plain.error).toBeUndefined()
+    expect(pageAt('/writing/published-post/')).toBeDefined()
+    expect(pageAt('/writing/unfinished-thoughts/')).toBeUndefined()
+    const urls = (plain.results ?? []).map((result) => result.url)
+    expect(urls.some((url) => url.includes('unfinished-thoughts'))).toBe(false)
+  })
+
+  it('leaves the draft off the index, its tag page and the feed while listing the published post', () => {
+    expect(plain.error).toBeUndefined()
+    const index = mainOf(pageAt('/writing/')?.content ?? '')
+    const tag = mainOf(pageAt('/writing/tags/testing/')?.content ?? '')
+    const feed = pageAt('/feed.xml')?.content ?? ''
+
+    for (const html of [index, tag, feed]) {
+      expect(html).toContain('Published Post')
+      expect(html).not.toContain('Unfinished Thoughts')
+      expect(html).not.toContain('unfinished-thoughts')
+      expect(html).not.toContain('A post still being written.')
+    }
+  })
+})
+
+describe('drafts under the dev server', () => {
+  let served: Awaited<ReturnType<typeof buildScenario>>
+
+  beforeAll(async () => {
+    served = await buildScenario('draft', { runMode: 'serve' })
+  }, 60_000)
+
+  const pageAt = (url: string) =>
+    served.results?.find((result) => result.url === url)
+  const marker = /\bDraft\b/
+  const visibleText = (html: string) => html.replace(/<[^>]*>/g, ' ')
+
+  function splitAtPublished(html: string) {
+    const main = mainOf(html)
+    const cut = main.indexOf('href="/writing/published-post/"')
+    return { draftSide: main.slice(0, cut), publishedSide: main.slice(cut) }
+  }
+
+  it('renders the draft at its own url marked Draft, unlike the published post', () => {
+    expect(served.error).toBeUndefined()
+    const draftPage = pageAt('/writing/unfinished-thoughts/')
+    const publishedPage = pageAt('/writing/published-post/')
+
+    expect(draftPage).toBeDefined()
+    expect(visibleText(mainOf(draftPage?.content ?? ''))).toMatch(marker)
+    expect(mainOf(draftPage?.content ?? '')).toContain('Unfinished Thoughts')
+    expect(publishedPage).toBeDefined()
+    expect(visibleText(mainOf(publishedPage?.content ?? ''))).not.toMatch(
+      marker
+    )
+  })
+
+  it.each(['/writing/', '/writing/tags/testing/'])(
+    'lists the draft on %s marked Draft while the published post carries no marker',
+    (url) => {
+      expect(served.error).toBeUndefined()
+      const html = pageAt(url)?.content ?? ''
+      expect(html).toContain('href="/writing/unfinished-thoughts/"')
+      expect(html).toContain('href="/writing/published-post/"')
+
+      const { draftSide, publishedSide } = splitAtPublished(html)
+      expect(visibleText(draftSide)).toMatch(marker)
+      expect(visibleText(publishedSide)).not.toMatch(marker)
+    }
+  )
+
+  it('includes the draft in the feed marked Draft while the published entry carries no marker', () => {
+    expect(served.error).toBeUndefined()
+    const xml = pageAt('/feed.xml')?.content ?? ''
+    const { feed } = new XMLParser({
+      ignoreAttributes: false,
+      parseTagValue: false
+    }).parse(xml)
+    const entries: Record<string, unknown>[] = [feed?.entry ?? []].flat()
+    const draftEntry = entries.find(
+      (entry) =>
+        entry.id === 'https://michaelmoser.dev/writing/unfinished-thoughts/'
+    )
+    const publishedEntry = entries.find(
+      (entry) => entry.id === 'https://michaelmoser.dev/writing/published-post/'
+    )
+
+    expect(draftEntry).toBeDefined()
+    expect(JSON.stringify(draftEntry)).toMatch(marker)
+    expect(publishedEntry).toBeDefined()
+    expect(JSON.stringify(publishedEntry)).not.toMatch(marker)
+  })
+})
+
 describe('tag pages', () => {
   it('lists exactly the engineering-leadership posts newest-first under its label heading', () => {
     expect(valid.error).toBeUndefined()

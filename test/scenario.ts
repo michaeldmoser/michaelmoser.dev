@@ -55,11 +55,12 @@ function assemble(name: string) {
   return join('test', '.scenarios', name)
 }
 
-function applyEnv(env: Record<string, string>) {
+function applyEnv(env: Record<string, string | undefined>) {
   const previous = new Map<string, string | undefined>()
   for (const [key, value] of Object.entries(env)) {
     previous.set(key, process.env[key])
-    process.env[key] = value
+    if (value === undefined) delete process.env[key]
+    else process.env[key] = value
   }
   return () => {
     for (const [key, value] of previous) {
@@ -77,12 +78,18 @@ export async function buildScenario(
   const Eleventy = await loadEleventy()
   const warnings: string[] = []
   const originalWarn = console.warn
-  const restoreEnv = applyEnv(options.env ?? {})
+  const restoreEnv = applyEnv({
+    CI: undefined,
+    WORKERS_CI: undefined,
+    ELEVENTY_RUN_MODE: undefined,
+    ...options.env
+  })
   console.warn = (...args: unknown[]) => {
     warnings.push(args.map(String).join(' '))
   }
   try {
     const eleventyOptions = {
+      ...(options.runMode ? { runMode: options.runMode } : {}),
       configPath: 'eleventy.config.ts',
       config: (eleventyConfig: { setUseGitIgnore(value: boolean): void }) => {
         eleventyConfig.setUseGitIgnore(false)

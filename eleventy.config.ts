@@ -1,7 +1,12 @@
 import { join } from 'node:path'
 import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
 import { build } from 'esbuild'
-import { checkPosts, type Vocabulary } from './lib/posts.ts'
+import {
+  checkPosts,
+  draftPolicy,
+  type RunContext,
+  type Vocabulary
+} from './lib/posts.ts'
 import { tsxExtension } from './lib/tsx.ts'
 
 async function bundleBrowserScript(entry: string): Promise<string> {
@@ -14,6 +19,14 @@ async function bundleBrowserScript(entry: string): Promise<string> {
     write: false
   })
   return result.outputFiles[0].text
+}
+
+function runContext(): RunContext {
+  return {
+    runMode: (process.env.ELEVENTY_RUN_MODE ??
+      'build') as RunContext['runMode'],
+    env: process.env
+  }
 }
 
 function isWritingMarkdown(item: CollectionItem): boolean {
@@ -34,10 +47,11 @@ function orderedPosts(collectionApi: CollectionApi): CollectionItem[] {
       item
     ])
   )
-  const { posts, violations } = checkPosts([...byEntry.keys()], vocabulary, {
-    runMode: 'build',
-    env: {}
-  })
+  const { posts, violations } = checkPosts(
+    [...byEntry.keys()],
+    vocabulary,
+    runContext()
+  )
   if (violations.length > 0) {
     throw new Error(`Invalid posts:\n${violations.join('\n')}`)
   }
@@ -48,7 +62,11 @@ function listedPost(item: CollectionItem) {
   return {
     url: item.url,
     date: item.date,
-    data: { title: item.data.title, description: item.data.description }
+    data: {
+      title: item.data.title,
+      description: item.data.description,
+      draft: item.data.draft
+    }
   }
 }
 
@@ -66,6 +84,17 @@ function tagPages(collectionApi: CollectionApi) {
 }
 
 export default function (eleventyConfig: UserConfig) {
+  eleventyConfig.addPreprocessor(
+    'excludeDrafts',
+    'md',
+    (data: { draft?: unknown; page: { inputPath: string } }) => {
+      if (data.draft !== true || draftPolicy(runContext()) !== 'exclude') {
+        return undefined
+      }
+      console.warn(`${data.page.inputPath}: draft excluded from the build`)
+      return false
+    }
+  )
   eleventyConfig.addCollection('posts', orderedPosts)
   eleventyConfig.addCollection('tagPages', tagPages)
   eleventyConfig.addGlobalData('prePaintScript', () =>

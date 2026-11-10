@@ -5,7 +5,8 @@ async function toFeedPost(site, post) {
   const url = `${site.url}${post.url}`
   return {
     url,
-    title: post.data.title,
+    title:
+      post.data.draft === true ? `Draft: ${post.data.title}` : post.data.title,
     date: post.date,
     contentHtml: await convertHtmlToAbsoluteUrls(post.templateContent, url, {
       closingSingleTag: 'slash'

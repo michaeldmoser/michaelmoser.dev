@@ -23,6 +23,11 @@ declare module '@11ty/eleventy' {
     addPassthroughCopy(path: string): void
     addTemplateFormats(formats: string): void
     addGlobalData(name: string, data: () => unknown): void
+    addPreprocessor(
+      name: string,
+      extensions: string,
+      callback: (data: never, content: string) => unknown
+    ): void
     addExtension(extension: string, options: TemplateExtension): void
   }
 
