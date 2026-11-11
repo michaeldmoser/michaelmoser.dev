@@ -130,6 +130,87 @@ async function invalidHtmlProblems(
   )
 }
 
+const PRIVACY_SCANNED_EXTENSIONS = ['.html', '.xml', '.json', '.txt']
+
+const NAMED_ENTITIES: Record<string, string> = {
+  commat: '@',
+  period: '.',
+  amp: '&',
+  lowbar: '_',
+  plus: '+'
+}
+
+const ENTITY_PATTERN = /&(?:#(\d+)|#x([0-9a-f]+)|([a-z][a-z0-9]*));/gi
+
+function decodeEntity(
+  entity: string,
+  decimal: string | undefined,
+  hex: string | undefined,
+  name: string | undefined
+): string {
+  if (name !== undefined) {
+    return NAMED_ENTITIES[name.toLowerCase()] ?? entity
+  }
+  const codePoint =
+    decimal !== undefined
+      ? Number.parseInt(decimal, 10)
+      : Number.parseInt(hex ?? '', 16)
+  return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity
+}
+
+function decodeEntities(text: string): string {
+  return text.replace(ENTITY_PATTERN, decodeEntity)
+}
+
+function decodePercentEncoding(text: string): string {
+  return text.replace(/%([0-9a-f]{2})/gi, (_, code) =>
+    String.fromCharCode(Number.parseInt(code, 16))
+  )
+}
+
+function containsContactEmail(text: string, contactEmail: string): boolean {
+  const decoded = decodePercentEncoding(decodeEntities(text))
+  return decoded.toLowerCase().includes(contactEmail.toLowerCase())
+}
+
+const US_PHONE_PATTERN =
+  /(?<!\d)(?:\+?1[\s.-]*)?\(?[2-9]\d{2}\)?[\s.-]*[2-9]\d{2}[\s.-]*\d{4}(?!\d)/
+
+function phoneNumberLine(text: string): number | null {
+  const index = text
+    .split('\n')
+    .findIndex((line) => US_PHONE_PATTERN.test(line))
+  return index === -1 ? null : index + 1
+}
+
+async function privacyProblems(
+  dir: string,
+  paths: string[],
+  contactEmail: string
+): Promise<Problem[]> {
+  const problems: Problem[] = []
+  for (const path of paths) {
+    if (!PRIVACY_SCANNED_EXTENSIONS.some((ext) => path.endsWith(ext))) {
+      continue
+    }
+    const text = await readFile(join(dir, path), 'utf8')
+    if (containsContactEmail(text, contactEmail)) {
+      problems.push({
+        file: path,
+        message: `contact address ${contactEmail} appears in built output`
+      })
+    }
+    const phoneLine = phoneNumberLine(text)
+    if (phoneLine !== null) {
+      problems.push({
+        file: path,
+        message: `US phone number appears on line ${phoneLine}`
+      })
+    }
+  }
+  return problems
+}
+
 export async function checkSite(
   dir: string,
   options: SiteCheckOptions
@@ -144,6 +225,7 @@ export async function checkSite(
     errors.push(...missingReferenceProblems(page, html, files))
     errors.push(...(await invalidHtmlProblems(validator, page, html)))
   }
+  errors.push(...(await privacyProblems(dir, paths, options.contactEmail)))
   if (
     !options.env.PRIVATE_TERMS &&
     !(await fileExists(options.privateTermsPath))

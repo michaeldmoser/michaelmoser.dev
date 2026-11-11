@@ -74,4 +74,56 @@ describe('checkSite', () => {
     expect(result.errors[0].message).toContain('Duplicate ID "intro"')
     expect(result.errors[0].message).toMatch(/\b11\b/)
   })
+
+  it('reports the contact address in html, xml, json and txt files however it is cased or encoded', async () => {
+    const result = await checkSite(outputDir('contact-email'), options)
+
+    expect(result.errors).toHaveLength(6)
+    expect(result.errors.map((error) => error.file).sort()).toEqual([
+      'data/mixed-case.json',
+      'entity-decimal/index.html',
+      'entity-hex/index.html',
+      'entity-named/index.html',
+      'feed.xml',
+      'plain.txt'
+    ])
+  })
+
+  it('matches only the configured contact address', async () => {
+    const result = await checkSite(outputDir('contact-email'), {
+      ...options,
+      contactEmail: 'hello@example.test'
+    })
+
+    expect(result.errors.map((error) => error.file)).toEqual([
+      'safe/index.html'
+    ])
+  })
+
+  it('reports the file and line of a US phone number in any format without echoing the number', async () => {
+    const result = await checkSite(outputDir('phone'), options)
+
+    const expected: Record<string, number> = {
+      'paren.txt': 3,
+      'dash.txt': 2,
+      'dot.txt': 4,
+      'plus-one.json': 2,
+      'one-dash.xml': 3,
+      'bare.txt': 5,
+      'tel/index.html': 10
+    }
+    expect(result.errors).toHaveLength(Object.keys(expected).length)
+    expect(result.errors).toEqual(
+      expect.arrayContaining(
+        Object.entries(expected).map(([file, line]) => ({
+          file,
+          message: expect.stringMatching(new RegExp(`\\b${line}\\b`))
+        }))
+      )
+    )
+    for (const error of result.errors) {
+      expect(error.message).not.toContain('555')
+      expect(error.message).not.toContain('0123')
+    }
+  })
 })
