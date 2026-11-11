@@ -9,7 +9,7 @@
     "#lib/*": "./lib/*"
   },
   "scripts": {
-    "build": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --input=src",
+    "build": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --input=src && node --import tsx scripts/check-site.ts _site",
     "dev": "node --import tsx node_modules/@11ty/eleventy/cmd.cjs --config=eleventy.config.ts --input=src --serve --output=.dev-site",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
