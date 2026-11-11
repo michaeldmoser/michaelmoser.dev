@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto'
 import { access, readdir, readFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 import { HtmlValidate } from 'html-validate'
+import { isCi } from './posts.ts'
 
 export type Problem = { file: string; message: string }
 
@@ -183,10 +185,36 @@ function phoneNumberLine(text: string): number | null {
   return index === -1 ? null : index + 1
 }
 
+function parseTerms(raw: string | undefined): string[] {
+  return (raw ?? '')
+    .split('|')
+    .map((term) => term.trim())
+    .filter((term) => term !== '')
+}
+
+async function loadTerms(options: SiteCheckOptions): Promise<string[]> {
+  const fromEnv = parseTerms(options.env.PRIVATE_TERMS)
+  if (fromEnv.length > 0) {
+    return fromEnv
+  }
+  if (!(await fileExists(options.privateTermsPath))) {
+    return []
+  }
+  return parseTerms(await readFile(options.privateTermsPath, 'utf8'))
+}
+
+function termHash(term: string): string {
+  return createHash('sha256')
+    .update(term.toLowerCase())
+    .digest('hex')
+    .slice(0, 12)
+}
+
 async function privacyProblems(
   dir: string,
   paths: string[],
-  contactEmail: string
+  contactEmail: string,
+  terms: string[]
 ): Promise<Problem[]> {
   const problems: Problem[] = []
   for (const path of paths) {
@@ -207,6 +235,15 @@ async function privacyProblems(
         message: `US phone number appears on line ${phoneLine}`
       })
     }
+    const lowered = text.toLowerCase()
+    for (const term of terms) {
+      if (lowered.includes(term.toLowerCase())) {
+        problems.push({
+          file: path,
+          message: `denylisted term with hash ${termHash(term)} appears in built output`
+        })
+      }
+    }
   }
   return problems
 }
@@ -225,11 +262,16 @@ export async function checkSite(
     errors.push(...missingReferenceProblems(page, html, files))
     errors.push(...(await invalidHtmlProblems(validator, page, html)))
   }
-  errors.push(...(await privacyProblems(dir, paths, options.contactEmail)))
-  if (
-    !options.env.PRIVATE_TERMS &&
-    !(await fileExists(options.privateTermsPath))
-  ) {
+  const terms = await loadTerms(options)
+  errors.push(
+    ...(await privacyProblems(dir, paths, options.contactEmail, terms))
+  )
+  if (terms.length === 0 && isCi(options.env)) {
+    errors.push({
+      file: options.privateTermsPath,
+      message: 'Private-terms denylist is missing'
+    })
+  } else if (terms.length === 0) {
     warnings.push(
       'No private-terms denylist configured; skipped the denylist scan'
     )

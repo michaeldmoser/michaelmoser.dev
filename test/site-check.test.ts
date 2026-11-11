@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { checkSite } from '../lib/site-check.ts'
@@ -125,5 +126,139 @@ describe('checkSite', () => {
       expect(error.message).not.toContain('555')
       expect(error.message).not.toContain('0123')
     }
+  })
+
+  describe('denylisted private terms', () => {
+    const termsFile = fileURLToPath(
+      new URL('./fixtures/private-terms.txt', import.meta.url)
+    )
+    const hash = (term: string) =>
+      createHash('sha256').update(term.toLowerCase()).digest('hex').slice(0, 12)
+    const expectReported = (
+      result: Awaited<ReturnType<typeof checkSite>>,
+      expected: Record<string, string>,
+      terms: string[]
+    ) => {
+      expect(result.errors).toHaveLength(Object.keys(expected).length)
+      expect(result.errors).toEqual(
+        expect.arrayContaining(
+          Object.entries(expected).map(([file, term]) => ({
+            file,
+            message: expect.stringContaining(hash(term))
+          }))
+        )
+      )
+      const output = [
+        ...result.errors.map((error) => error.message),
+        ...result.warnings
+      ]
+        .join('\n')
+        .toLowerCase()
+      for (const term of terms) {
+        expect(output).not.toContain(term)
+      }
+    }
+
+    it('reports a hash and file for terms from PRIVATE_TERMS in any letter case without echoing them', async () => {
+      const result = await checkSite(outputDir('private-terms'), {
+        ...options,
+        env: { PRIVATE_TERMS: ' ZzQuillFern |  | zzbrackenmoor ' }
+      })
+
+      expectReported(
+        result,
+        { 'index.html': 'zzbrackenmoor', 'notes.txt': 'zzquillfern' },
+        ['zzquillfern', 'zzbrackenmoor']
+      )
+    })
+
+    it('reports a hash and file for terms from the private terms file when PRIVATE_TERMS is unset', async () => {
+      const result = await checkSite(outputDir('private-terms'), {
+        ...options,
+        privateTermsPath: termsFile
+      })
+
+      expectReported(
+        result,
+        { 'file-only.json': 'zzthornwick', 'feed.xml': 'zzlindenmere' },
+        ['zzthornwick', 'zzlindenmere']
+      )
+    })
+
+    it('uses only PRIVATE_TERMS when it is non-blank even though the private terms file exists', async () => {
+      const result = await checkSite(outputDir('private-terms'), {
+        ...options,
+        env: { PRIVATE_TERMS: 'zzquillfern' },
+        privateTermsPath: termsFile
+      })
+
+      expectReported(result, { 'notes.txt': 'zzquillfern' }, [
+        'zzquillfern',
+        'zzthornwick',
+        'zzlindenmere'
+      ])
+    })
+  })
+
+  describe('missing denylist in CI', () => {
+    it.each([
+      ['CI is set and PRIVATE_TERMS is unset', { CI: '1' }],
+      [
+        'WORKERS_CI is set and PRIVATE_TERMS is empty',
+        { WORKERS_CI: '1', PRIVATE_TERMS: '' }
+      ],
+      [
+        'WORKERS_CI is set and PRIVATE_TERMS is whitespace',
+        { WORKERS_CI: '1', PRIVATE_TERMS: '   ' }
+      ]
+    ])(
+      'reports an error that the denylist is missing when %s and there is no file',
+      async (_name, env) => {
+        const result = await checkSite(outputDir('clean'), { ...options, env })
+
+        expect(result.errors).toHaveLength(1)
+        expect(result.errors[0].message).toMatch(/denylist/i)
+        expect(result.errors[0].message).toMatch(/missing/i)
+      }
+    )
+  })
+
+  describe('missing denylist locally', () => {
+    const blankTermsFile = fileURLToPath(
+      new URL('./fixtures/private-terms-blank.txt', import.meta.url)
+    )
+
+    it.each([
+      [
+        'PRIVATE_TERMS is whitespace and there is no file',
+        { env: { PRIVATE_TERMS: '   ' } }
+      ],
+      [
+        'PRIVATE_TERMS is unset and the file holds only separators',
+        { privateTermsPath: blankTermsFile }
+      ]
+    ])(
+      'warns about the denylist and still runs the other checks when %s',
+      async (_name, overrides) => {
+        const result = await checkSite(outputDir('contact-email'), {
+          ...options,
+          ...overrides
+        })
+
+        expect(result.warnings).toHaveLength(1)
+        expect(result.warnings[0]).toMatch(/denylist/i)
+        expect(result.errors.map((error) => error.file).sort()).toEqual([
+          'data/mixed-case.json',
+          'entity-decimal/index.html',
+          'entity-hex/index.html',
+          'entity-named/index.html',
+          'feed.xml',
+          'plain.txt'
+        ])
+        for (const error of result.errors) {
+          expect(error.message).not.toMatch(/denylist/i)
+        }
+      }
+    )
   })
 })
