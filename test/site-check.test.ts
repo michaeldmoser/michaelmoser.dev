@@ -64,4 +64,14 @@ describe('checkSite', () => {
       )
     )
   })
+
+  it('reports the html-validate rule, message and line for a page with invalid HTML', async () => {
+    const result = await checkSite(outputDir('invalid-html'), options)
+
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0].file).toBe('bad/index.html')
+    expect(result.errors[0].message).toContain('no-dup-id')
+    expect(result.errors[0].message).toContain('Duplicate ID "intro"')
+    expect(result.errors[0].message).toMatch(/\b11\b/)
+  })
 })

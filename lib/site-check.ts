@@ -1,5 +1,6 @@
 import { access, readdir, readFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
+import { HtmlValidate } from 'html-validate'
 
 export type Problem = { file: string; message: string }
 
@@ -108,6 +109,27 @@ function missingReferenceProblems(
     }))
 }
 
+async function createValidator(): Promise<HtmlValidate> {
+  const config = JSON.parse(
+    await readFile(new URL('../.htmlvalidate.json', import.meta.url), 'utf8')
+  )
+  return new HtmlValidate(config)
+}
+
+async function invalidHtmlProblems(
+  validator: HtmlValidate,
+  page: string,
+  html: string
+): Promise<Problem[]> {
+  const report = await validator.validateString(html, page)
+  return report.results.flatMap((result) =>
+    result.messages.map((message) => ({
+      file: page,
+      message: `${message.ruleId}: ${message.message} (line ${message.line})`
+    }))
+  )
+}
+
 export async function checkSite(
   dir: string,
   options: SiteCheckOptions
@@ -116,9 +138,11 @@ export async function checkSite(
   const warnings: string[] = []
   const paths = await listFiles(dir)
   const files = new Set(paths)
+  const validator = await createValidator()
   for (const page of paths.filter((path) => path.endsWith('.html'))) {
     const html = await readFile(join(dir, page), 'utf8')
     errors.push(...missingReferenceProblems(page, html, files))
+    errors.push(...(await invalidHtmlProblems(validator, page, html)))
   }
   if (
     !options.env.PRIVATE_TERMS &&
