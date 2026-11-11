@@ -24,6 +24,7 @@
     "@types/node": "^24.19.2",
     "esbuild": "0.28.2",
     "fast-xml-parser": "^5.12.0",
+    "html-validate": "^11.21.0",
     "jsx-async-runtime": "^3.0.0",
     "postcss": "8.5.32",
     "satori": "^0.63.2",

@@ -3,6 +3,7 @@
   "title": "Michael Moser",
   "feedTitle": "Michael Moser — Writing",
   "author": { "name": "Michael Moser" },
+  "contactEmail": "reachoutto@michaelmoser.dev",
   "feedUpdatedFallback": "2026-01-01T00:00:00Z",
   "description": "Michael Moser is a Staff Software Engineer writing about building and running software.",
   "jobTitle": "Staff Software Engineer",
