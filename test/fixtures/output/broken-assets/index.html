@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Assets</title>
+<link rel="stylesheet" href="/css/present.css">
+<link rel="stylesheet" href="/css/missing.css">
+<script src="/js/present.js"></script>
+<script src="/js/missing.js"></script>
+</head>
+<body>
+<main>
+<h1>Assets</h1>
+<img src="/images/present.svg" alt="Present image">
+<img src="images/present.svg" alt="Present relative image">
+<img src="/images/missing.svg" alt="Missing image">
+<img src="/images/present.svg" srcset="/images/present.svg 1x, /images/missing-2x.svg 2x" alt="Image with one missing candidate">
+<img src="https://example.com/external.png" alt="External image">
+<picture>
+<source srcset="/images/present.svg" media="(min-width: 800px)">
+<source srcset="/images/missing-wide.svg 480w" media="(min-width: 400px)">
+<img src="/images/present.svg" alt="Picture fallback">
+</picture>
+<audio controls>
+<source src="/media/present.mp3" type="audio/mpeg">
+</audio>
+<video controls>
+<source src="/media/missing.mp4" type="video/mp4">
+</video>
+</main>
+</body>
+</html>
