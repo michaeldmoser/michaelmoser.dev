@@ -16,3 +16,35 @@ export function readableAddress(address: string): string {
 export function decodeAddress(encoded: string): string {
   return reverse(atob(encoded))
 }
+
+export interface ContactAnchor {
+  href: string
+  textContent: string | null
+}
+
+export interface ContactPlaceholder {
+  getAttribute(name: string): string | null
+  replaceWith(node: ContactAnchor): void
+}
+
+export interface ContactDocument {
+  querySelectorAll(selector: '[data-contact]'): ArrayLike<ContactPlaceholder>
+  createElement(tag: 'a'): ContactAnchor
+}
+
+const mailScheme = ['mail', 'to'].join('')
+
+export function initContactLinks(doc: ContactDocument): void {
+  for (const placeholder of Array.from(
+    doc.querySelectorAll('[data-contact]')
+  )) {
+    const anchor = doc.createElement('a')
+    const address = decodeAddress(
+      placeholder.getAttribute('data-contact') ?? ''
+    )
+    anchor.href = [mailScheme, address].join(':')
+    anchor.textContent =
+      placeholder.getAttribute('data-contact-label') ?? 'Email'
+    placeholder.replaceWith(anchor)
+  }
+}

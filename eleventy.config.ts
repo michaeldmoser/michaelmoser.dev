@@ -10,7 +10,6 @@ import {
   type Vocabulary
 } from './lib/posts.ts'
 import { tsxExtension } from './lib/tsx.ts'
-import site from './src/_data/site.json' with { type: 'json' }
 
 async function bundleBrowserScript(entry: string): Promise<string> {
   const result = await build({
@@ -115,15 +114,21 @@ export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addCollection('posts', orderedPosts)
   eleventyConfig.addCollection('featuredPosts', featuredPosts)
   eleventyConfig.addCollection('tagPages', tagPages)
-  eleventyConfig.addGlobalData('contact', () => ({
-    encoded: encodeAddress(site.contactEmail),
-    readable: readableAddress(site.contactEmail)
-  }))
+  eleventyConfig.addGlobalData(
+    'eleventyComputed.contact',
+    () => (data: { site: { contactEmail: string } }) => ({
+      encoded: encodeAddress(data.site.contactEmail),
+      readable: readableAddress(data.site.contactEmail)
+    })
+  )
   eleventyConfig.addGlobalData('prePaintScript', () =>
     bundleBrowserScript('pre-paint.ts')
   )
   eleventyConfig.addGlobalData('themeScript', () =>
     bundleBrowserScript('theme-toggle.ts')
+  )
+  eleventyConfig.addGlobalData('contactScript', () =>
+    bundleBrowserScript('contact.ts')
   )
   eleventyConfig.addPassthroughCopy('src/assets/css')
   eleventyConfig.addTemplateFormats('11ty.tsx')

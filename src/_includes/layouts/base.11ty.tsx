@@ -22,6 +22,7 @@ export default function base(data: {
   ogImage?: string
   page: { url: string; date: Date }
   prePaintScript: string
+  contact: { encoded: string; readable: string }
   site: SeoSite & { feedTitle: string }
 }) {
   const meta = pageMeta({
@@ -68,11 +69,12 @@ export default function base(data: {
           />
           <link rel='stylesheet' href='/assets/css/site.css' />
           <script src='/assets/js/theme.js' defer></script>
+          <script src='/assets/js/contact.js' defer></script>
         </head>
         <body>
           <Header items={navItems} />
           <main>{html(data.content)}</main>
-          <Footer />
+          <Footer contact={data.contact} />
         </body>
       </html>
     </>
