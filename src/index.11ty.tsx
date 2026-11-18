@@ -18,7 +18,14 @@ export default class Home {
     return (
       <>
         <h1>Michael Moser</h1>
-        <p>Notes on building software, written from Montana.</p>
+        <p>
+          I'm Michael Moser, a Staff Software Engineer in Montana. I work at
+          Uplisting, where I build [TODO Michael: what you build there, in a few
+          words], and the part I find most interesting is usually what happens
+          after something ships: whether a team can realistically run it,
+          support it and keep changing it.
+        </p>
+        <p>This is where I write about building and running software.</p>
         <p>
           <a href='https://www.linkedin.com/in/michaeldmoser/'>LinkedIn</a>{' '}
           <a href='https://github.com/michaeldmoser'>GitHub</a>{' '}
