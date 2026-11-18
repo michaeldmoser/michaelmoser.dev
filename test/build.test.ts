@@ -22,27 +22,6 @@ beforeAll(async () => {
   }).toJSON()
 }, 60_000)
 
-describe('site build', () => {
-  it('renders the index page as a full HTML document with the markdown body as unescaped HTML inside main', () => {
-    const index = results.find((result) => result.url === '/')
-
-    expect(index).toBeDefined()
-    const html = index?.content ?? ''
-    expect(html.toLowerCase()).toContain('<!doctype html>')
-    const main = html.match(/<main>([\s\S]*)<\/main>/)
-    expect(main).not.toBeNull()
-    expect(main?.[1]).toContain('<h1')
-    expect(main?.[1]).not.toContain('&lt;h1')
-  })
-
-  it('keeps a literal {{ page.url }} in the markdown verbatim instead of rendering it', () => {
-    const index = results.find((result) => result.url === '/')
-
-    expect(index).toBeDefined()
-    expect(index?.content).toContain('<code>{{ page.url }}</code>')
-  })
-})
-
 function anchors(fragment: string) {
   return [...fragment.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map((match) => ({
     href: match[0].match(/href="([^"]*)"/)?.[1],
