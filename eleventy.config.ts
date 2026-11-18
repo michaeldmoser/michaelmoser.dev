@@ -1,13 +1,16 @@
 import { join } from 'node:path'
 import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
 import { build } from 'esbuild'
+import { encodeAddress, readableAddress } from './lib/contact.ts'
 import {
   checkPosts,
   draftPolicy,
   type RunContext,
+  selectFeatured,
   type Vocabulary
 } from './lib/posts.ts'
 import { tsxExtension } from './lib/tsx.ts'
+import site from './src/_data/site.json' with { type: 'json' }
 
 async function bundleBrowserScript(entry: string): Promise<string> {
   const result = await build({
@@ -70,6 +73,20 @@ function listedPost(item: CollectionItem) {
   }
 }
 
+function featuredPosts(collectionApi: CollectionApi) {
+  const byEntry = new Map(
+    orderedPosts(collectionApi).map((item) => [
+      { inputPath: item.inputPath, frontmatter: item.data },
+      item
+    ])
+  )
+  const { featured, violations } = selectFeatured([...byEntry.keys()])
+  if (violations.length > 0) {
+    throw new Error(`Invalid featured posts:\n${violations.join('\n')}`)
+  }
+  return featured.map((entry) => byEntry.get(entry) as CollectionItem)
+}
+
 function tagPages(collectionApi: CollectionApi) {
   const posts = orderedPosts(collectionApi)
   return Object.entries(vocabularyOf(collectionApi))
@@ -96,7 +113,12 @@ export default function (eleventyConfig: UserConfig) {
     }
   )
   eleventyConfig.addCollection('posts', orderedPosts)
+  eleventyConfig.addCollection('featuredPosts', featuredPosts)
   eleventyConfig.addCollection('tagPages', tagPages)
+  eleventyConfig.addGlobalData('contact', () => ({
+    encoded: encodeAddress(site.contactEmail),
+    readable: readableAddress(site.contactEmail)
+  }))
   eleventyConfig.addGlobalData('prePaintScript', () =>
     bundleBrowserScript('pre-paint.ts')
   )
