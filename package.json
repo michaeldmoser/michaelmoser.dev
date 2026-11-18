@@ -19,18 +19,18 @@
   "devDependencies": {
     "@11ty/eleventy": "~3.1.8",
     "@11ty/eleventy-plugin-rss": "^3.1.0",
-    "@biomejs/biome": "2.6.6",
+    "@biomejs/biome": "2.6.8",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^24.19.2",
     "esbuild": "0.28.2",
-    "fast-xml-parser": "^5.12.0",
-    "html-validate": "^11.21.0",
-    "jsx-async-runtime": "^3.0.0",
-    "postcss": "8.5.32",
+    "fast-xml-parser": "^5.12.1",
+    "html-validate": "^11.21.1",
+    "jsx-async-runtime": "^3.0.1",
+    "postcss": "8.5.33",
     "satori": "^0.63.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^4.1.12",
-    "wrangler": "^4.157.0"
+    "wrangler": "^4.162.0"
   }
 }
