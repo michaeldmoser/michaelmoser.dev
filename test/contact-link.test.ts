@@ -22,27 +22,28 @@ beforeAll(async () => {
   }).toJSON()
 }, 60_000)
 
-function htmlPages() {
-  return results.filter(
+function htmlPages(built: BuildResult[]) {
+  return built.filter(
     (result) =>
       typeof result.content === 'string' && /<html[\s>]/i.test(result.content)
   )
 }
 
+function footerContactText(html: string) {
+  const footer = html.match(/<footer[\s>][\s\S]*?<\/footer>/)?.[0] ?? ''
+  const contact = footer.match(
+    /<([a-z]+)\b[^>]*\sdata-contact(?:="[^"]*")?[^>]*>([\s\S]*?)<\/\1>/
+  )
+  return contact?.[2].replace(/<[^>]*>/g, '').trim()
+}
+
 describe('contact email with JavaScript off', () => {
   it('shows the readable fallback in every page footer and never emits a mailto link', () => {
-    const pages = htmlPages()
+    const pages = htmlPages(results)
     expect(pages.length).toBeGreaterThan(0)
 
     for (const page of pages) {
-      const footer =
-        page.content.match(/<footer[\s>][\s\S]*?<\/footer>/)?.[0] ?? ''
-      expect(footer, page.url).not.toBe('')
-      const contact = footer.match(
-        /<([a-z]+)\b[^>]*\sdata-contact(?:="[^"]*")?[^>]*>([\s\S]*?)<\/\1>/
-      )
-      expect(contact, page.url).not.toBeNull()
-      expect(contact?.[2].replace(/<[^>]*>/g, '').trim(), page.url).toBe(
+      expect(footerContactText(page.content), page.url).toBe(
         'reachoutto [at] michaelmoser [dot] dev'
       )
     }
@@ -102,7 +103,7 @@ describe('contact email with JavaScript on', () => {
   it.each(['/', '/about/', 'another'])(
     'turns every placeholder on %s into a labelled mailto link',
     (target) => {
-      const pages = htmlPages()
+      const pages = htmlPages(results)
       const page =
         target === 'another'
           ? pages.find(
@@ -159,19 +160,11 @@ describe('contact email changed in site data', () => {
     const outcome = await buildScenario('contact-changed')
     expect(outcome.error).toBeUndefined()
     const built = (outcome.results ?? []) as BuildResult[]
-    const pages = built.filter(
-      (result) =>
-        typeof result.content === 'string' && /<html[\s>]/i.test(result.content)
-    )
+    const pages = htmlPages(built)
     expect(pages.length).toBeGreaterThan(0)
 
     for (const page of pages) {
-      const footer =
-        page.content.match(/<footer[\s>][\s\S]*?<\/footer>/)?.[0] ?? ''
-      const contact = footer.match(
-        /<([a-z]+)\b[^>]*\sdata-contact(?:="[^"]*")?[^>]*>([\s\S]*?)<\/\1>/
-      )
-      expect(contact?.[2].replace(/<[^>]*>/g, '').trim(), page.url).toBe(
+      expect(footerContactText(page.content), page.url).toBe(
         'hello [at] mail [dot] example [dot] org'
       )
     }
