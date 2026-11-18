@@ -5,6 +5,7 @@ import {
   isCi,
   type PostEntry,
   type RunContext,
+  selectFeatured,
   type Vocabulary
 } from '../lib/posts.ts'
 
@@ -298,6 +299,98 @@ describe('draftPolicy', () => {
     expect(
       draftPolicy({ runMode: 'serve', env: { CI: '', WORKERS_CI: '' } })
     ).toBe('render')
+  })
+})
+
+describe('selectFeatured picks', () => {
+  const at = (name: string) => `./src/writing/${name}/index.md`
+  const post = (name: string, featured?: unknown) =>
+    entry(featured === undefined ? valid : { ...valid, featured }, at(name))
+  const pick = (posts: PostEntry[]) => {
+    const result = selectFeatured(posts)
+    return {
+      paths: result.featured.map((p) => p.inputPath),
+      violations: result.violations
+    }
+  }
+
+  it('takes the three newest posts when none are marked', () => {
+    const result = pick([post('a'), post('b'), post('c'), post('d'), post('e')])
+    expect(result.paths).toEqual([at('a'), at('b'), at('c')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('puts one marked post first then fills with the newest unmarked', () => {
+    const result = pick([
+      post('a'),
+      post('b'),
+      post('c', true),
+      post('d'),
+      post('e')
+    ])
+    expect(result.paths).toEqual([at('c'), at('a'), at('b')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('returns exactly three marked posts newest first with no fill', () => {
+    const result = pick([
+      post('a'),
+      post('b', true),
+      post('c', true),
+      post('d'),
+      post('e', true)
+    ])
+    expect(result.paths).toEqual([at('b'), at('c'), at('e')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('returns every post newest first when fewer than three exist', () => {
+    const result = pick([post('a'), post('b', true)])
+    expect(result.paths).toEqual([at('b'), at('a')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('keeps a marked older post ahead of newer unmarked fill-ins', () => {
+    const result = pick([post('a'), post('b'), post('c'), post('z', true)])
+    expect(result.paths).toEqual([at('z'), at('a'), at('b')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('does not count a truthy non-boolean featured value as marked', () => {
+    const result = pick([post('a'), post('b'), post('c'), post('d', 'yes')])
+    expect(result.paths).toEqual([at('a'), at('b'), at('c')])
+    expect(result.violations).toEqual([])
+  })
+
+  it('returns nothing for an empty list', () => {
+    const result = pick([])
+    expect(result.paths).toEqual([])
+    expect(result.violations).toEqual([])
+  })
+})
+
+describe('selectFeatured over-marking', () => {
+  const at = (name: string) => `./src/writing/${name}/index.md`
+  const marked = ['a', 'b', 'c', 'd']
+  const unmarked = ['e', 'f']
+  const posts = [
+    entry({ ...valid, featured: true }, at('a')),
+    entry(valid, at('e')),
+    entry({ ...valid, featured: true }, at('b')),
+    entry({ ...valid, featured: true }, at('c')),
+    entry(valid, at('f')),
+    entry({ ...valid, featured: true }, at('d'))
+  ]
+
+  it('reports one violation naming every marked post when more than three are marked', () => {
+    const result = selectFeatured(posts)
+    expect(result.violations).toHaveLength(1)
+    for (const name of marked) {
+      expect(result.violations[0]).toContain(at(name))
+    }
+    for (const name of unmarked) {
+      expect(result.violations[0]).not.toContain(at(name))
+    }
   })
 })
 

@@ -132,6 +132,24 @@ function isDraft(entry: PostEntry): boolean {
   return entry.frontmatter.draft === true
 }
 
+const FEATURED_LIMIT = 3
+
+export function selectFeatured(posts: PostEntry[]): {
+  featured: PostEntry[]
+  violations: string[]
+} {
+  const marked = posts.filter((post) => post.frontmatter.featured === true)
+  const unmarked = posts.filter((post) => post.frontmatter.featured !== true)
+  const featured = [...marked, ...unmarked].slice(0, FEATURED_LIMIT)
+  const violations =
+    marked.length > FEATURED_LIMIT
+      ? [
+          `${marked.map((post) => post.inputPath).join(', ')}: more than ${FEATURED_LIMIT} posts are marked featured`
+        ]
+      : []
+  return { featured, violations }
+}
+
 export function checkPosts(
   entries: PostEntry[],
   vocabulary: Vocabulary,
