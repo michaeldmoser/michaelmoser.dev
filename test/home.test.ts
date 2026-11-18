@@ -48,25 +48,27 @@ describe('home page with no posts', () => {
   })
 })
 
+async function featuredLinks(scenario: string) {
+  const outcome = await buildScenario(scenario)
+  expect(outcome.error).toBeUndefined()
+  const page = outcome.results?.find((result) => result.url === '/')
+  expect(page).toBeDefined()
+  const featured =
+    page?.content.match(
+      /<section\b[^>]*\bid="featured"[^>]*>[\s\S]*?<\/section>/
+    )?.[0] ?? ''
+
+  expect(featured).not.toBe('')
+
+  return [...featured.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map((match) => ({
+    href: match[0].match(/href="([^"]*)"/)?.[1] ?? '',
+    text: match[0].replace(/<[^>]*>/g, '').trim()
+  }))
+}
+
 describe('home page featured fill', () => {
   it('lists the marked post first then the newest unmarked posts up to three each linked by title', async () => {
-    const outcome = await buildScenario('featured-fill')
-    expect(outcome.error).toBeUndefined()
-    const page = outcome.results?.find((result) => result.url === '/')
-    expect(page).toBeDefined()
-    const featured =
-      page?.content.match(
-        /<section\b[^>]*\bid="featured"[^>]*>[\s\S]*?<\/section>/
-      )?.[0] ?? ''
-
-    expect(featured).not.toBe('')
-
-    const links = [...featured.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
-      (match) => ({
-        href: match[0].match(/href="([^"]*)"/)?.[1] ?? '',
-        text: match[0].replace(/<[^>]*>/g, '').trim()
-      })
-    )
+    const links = await featuredLinks('featured-fill')
 
     expect(links.map((link) => link.text)).toEqual([
       'Marked Older Post',
@@ -81,22 +83,9 @@ describe('home page featured fill', () => {
   }, 60_000)
 
   it('shows only the three marked posts newest first when newer unmarked posts exist', async () => {
-    const outcome = await buildScenario('featured-three')
-    expect(outcome.error).toBeUndefined()
-    const page = outcome.results?.find((result) => result.url === '/')
-    expect(page).toBeDefined()
-    const featured =
-      page?.content.match(
-        /<section\b[^>]*\bid="featured"[^>]*>[\s\S]*?<\/section>/
-      )?.[0] ?? ''
+    const links = await featuredLinks('featured-three')
 
-    expect(featured).not.toBe('')
-
-    const titles = [...featured.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
-      (match) => match[0].replace(/<[^>]*>/g, '').trim()
-    )
-
-    expect(titles).toEqual([
+    expect(links.map((link) => link.text)).toEqual([
       'Bravo Marked Post',
       'Charlie Marked Post',
       'Alpha Marked Post'
@@ -139,23 +128,9 @@ describe('more than three featured posts', () => {
 
 describe('featured posts with a marked draft', () => {
   it('builds and features only the three published marked posts', async () => {
-    const outcome = await buildScenario('featured-draft')
+    const links = await featuredLinks('featured-draft')
 
-    expect(outcome.error).toBeUndefined()
-    const page = outcome.results?.find((result) => result.url === '/')
-    expect(page).toBeDefined()
-    const featured =
-      page?.content.match(
-        /<section\b[^>]*\bid="featured"[^>]*>[\s\S]*?<\/section>/
-      )?.[0] ?? ''
-
-    expect(featured).not.toBe('')
-
-    const titles = [...featured.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
-      (match) => match[0].replace(/<[^>]*>/g, '').trim()
-    )
-
-    expect(titles).toEqual([
+    expect(links.map((link) => link.text)).toEqual([
       'Three Marked Post',
       'Two Marked Post',
       'One Marked Post'
