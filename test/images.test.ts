@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { buildScenario } from './scenario.ts'
 
 function failureText(error: Error | undefined) {
@@ -35,4 +37,55 @@ describe('image alt text failures', () => {
     },
     60_000
   )
+})
+
+describe('raster images', () => {
+  let outputDir = ''
+  let html = ''
+
+  beforeAll(async () => {
+    const outcome = await buildScenario('images', { write: true })
+    outputDir = outcome.outputDir ?? ''
+    const page = join(outputDir, 'writing', 'gallery', 'index.html')
+    html = existsSync(page) ? readFileSync(page, 'utf8') : ''
+  }, 60_000)
+
+  function picture() {
+    return html.match(/<picture>[\s\S]*?<\/picture>/)?.[0] ?? ''
+  }
+
+  function referencedFiles() {
+    const urls = [...picture().matchAll(/srcset="([^"]+)"/g)].flatMap((match) =>
+      match[1].split(',').map((candidate) => candidate.trim().split(/\s+/)[0])
+    )
+    return urls
+  }
+
+  it('offers AVIF and WebP sources for a local screenshot', () => {
+    expect(picture()).toMatch(/<source[^>]*type="image\/avif"/)
+    expect(picture()).toMatch(/<source[^>]*type="image\/webp"/)
+  })
+
+  it('renders a lazy img with dimensions and the alt text', () => {
+    const img = picture().match(/<img[^>]*>/)?.[0] ?? ''
+
+    expect(img).toMatch(/\swidth="\d+"/)
+    expect(img).toMatch(/\sheight="\d+"/)
+    expect(img).toContain('loading="lazy"')
+    expect(img).toContain('alt="A terminal screenshot"')
+  })
+
+  it('writes every referenced variant to the output', () => {
+    const urls = referencedFiles()
+
+    expect(urls.length).toBeGreaterThan(0)
+    for (const url of urls) {
+      expect(existsSync(join(outputDir, url))).toBe(true)
+    }
+  })
+
+  it('leaves a remote image as a plain img', () => {
+    expect(html).toMatch(/<img[^>]*src="https:\/\/example\.com\/remote\.png"/)
+    expect(picture()).not.toContain('example.com')
+  })
 })

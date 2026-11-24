@@ -1,4 +1,12 @@
-import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs'
+import {
+  cpSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync
+} from 'node:fs'
 import { join } from 'node:path'
 import type { BuildResult } from '@11ty/eleventy'
 import { register } from 'tsx/esm/api'
@@ -8,10 +16,12 @@ const root = join(import.meta.dirname, '..')
 interface ScenarioOptions {
   env?: Record<string, string>
   runMode?: 'build' | 'serve'
+  write?: boolean
 }
 
 interface ScenarioOutcome {
   results?: BuildResult[]
+  outputDir?: string
   error?: Error
   warnings: string[]
 }
@@ -56,7 +66,23 @@ function assemble(name: string) {
       recursive: true
     })
   }
+  decodeBase64Files(scenarioDir)
   return join('test', '.scenarios', name)
+}
+
+function decodeBase64Files(dir: string) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      decodeBase64Files(path)
+    } else if (entry.name.endsWith('.base64')) {
+      writeFileSync(
+        path.slice(0, -'.base64'.length),
+        Buffer.from(readFileSync(path, 'utf8'), 'base64')
+      )
+      rmSync(path)
+    }
+  }
 }
 
 function applyEnv(env: Record<string, string | undefined>) {
@@ -99,11 +125,13 @@ export async function buildScenario(
         eleventyConfig.setUseGitIgnore(false)
       }
     }
-    const results = await new Eleventy(
-      input,
-      join(input, '_out'),
-      eleventyOptions
-    ).toJSON()
+    const outputDir = join(root, input, '_out')
+    const eleventy = new Eleventy(input, join(input, '_out'), eleventyOptions)
+    if (options.write) {
+      const results = (await eleventy.write()) as BuildResult[]
+      return { results, outputDir, warnings }
+    }
+    const results = await eleventy.toJSON()
     return { results, warnings }
   } catch (error) {
     return { error: error as Error, warnings }

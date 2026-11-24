@@ -1,11 +1,12 @@
 import { join } from 'node:path'
 import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
+import { eleventyImageTransformPlugin } from '@11ty/eleventy-img'
 import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { build } from 'esbuild'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
-import { altProblem } from './lib/images.ts'
+import { altProblem, isLocalImage } from './lib/images.ts'
 import {
   checkPosts,
   draftPolicy,
@@ -157,6 +158,7 @@ function addCallouts(md: unknown) {
 interface ImageToken {
   content: string
   attrGet(name: string): string | null
+  attrSet(name: string, value: string): void
 }
 
 type ImageRule = (
@@ -178,13 +180,13 @@ function requireAltText(md: ImageRenderer) {
   const render = md.renderer.rules.image
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx]
-    const problem = altProblem(
-      token.attrGet('src') ?? '',
-      token.content,
-      env.page.inputPath
-    )
+    const src = token.attrGet('src') ?? ''
+    const problem = altProblem(src, token.content, env.page.inputPath)
     if (problem) {
       throw new Error(problem)
+    }
+    if (!isLocalImage(src)) {
+      token.attrSet('eleventy:ignore', '')
     }
     return render(tokens, idx, options, env, self)
   }
@@ -192,6 +194,20 @@ function requireAltText(md: ImageRenderer) {
 
 export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addPlugin(syntaxHighlight)
+  eleventyConfig.htmlTransformer.setPosthtmlProcessOptions({
+    recognizeNoValueAttribute: true
+  })
+  eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    formats: ['avif', 'webp', 'auto'],
+    widths: [720, 1440, 'auto'],
+    htmlOptions: {
+      imgAttributes: {
+        loading: 'lazy',
+        decoding: 'async',
+        sizes: '(min-width: 65ch) 65ch, 100vw'
+      }
+    }
+  })
   eleventyConfig.amendLibrary('md', restrictHighlighting)
   eleventyConfig.amendLibrary('md', requireAltText)
   eleventyConfig.amendLibrary('md', addCallouts)

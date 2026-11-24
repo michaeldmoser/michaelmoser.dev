@@ -16,6 +16,9 @@ declare module '@11ty/eleventy' {
   }
 
   export interface UserConfig {
+    htmlTransformer: {
+      setPosthtmlProcessOptions(options: Record<string, unknown>): void
+    }
     addCollection(
       name: string,
       callback: (collectionApi: CollectionApi) => unknown[]
@@ -30,7 +33,7 @@ declare module '@11ty/eleventy' {
       callback: (data: never, content: string) => unknown
     ): void
     addExtension(extension: string, options: TemplateExtension): void
-    addPlugin(plugin: unknown): void
+    addPlugin(plugin: unknown, options?: unknown): void
     amendLibrary(name: string, callback: (library: never) => void): void
   }
 
@@ -48,5 +51,6 @@ declare module '@11ty/eleventy' {
       options?: { configPath?: string }
     )
     toJSON(): Promise<BuildResult[]>
+    write(): Promise<unknown>
   }
 }
