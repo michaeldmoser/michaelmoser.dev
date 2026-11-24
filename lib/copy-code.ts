@@ -4,14 +4,20 @@ export interface CodeButton {
   addEventListener(type: 'click', handler: () => void): void
 }
 
+export interface CodeWrapper {
+  classList: { add(name: string): void }
+  append(...nodes: Array<CodeBlock | CodeButton>): void
+}
+
 export interface CodeBlock {
   querySelector(selector: 'code'): { textContent: string | null } | null
-  append(button: CodeButton): void
+  replaceWith(wrapper: CodeWrapper): void
 }
 
 export interface CodeRoot {
   querySelectorAll(selector: 'pre'): ArrayLike<CodeBlock>
   createElement(tag: 'button'): CodeButton
+  createElement(tag: 'div'): CodeWrapper
 }
 
 export interface CodeClipboard {
@@ -44,6 +50,9 @@ export function enhanceCodeBlocks(
         button.textContent = 'Copy failed'
       }
     })
-    block.append(button)
+    const wrapper = root.createElement('div')
+    wrapper.classList.add('code-block')
+    block.replaceWith(wrapper)
+    wrapper.append(block, button)
   }
 }

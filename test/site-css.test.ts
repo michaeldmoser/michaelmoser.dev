@@ -391,6 +391,34 @@ describe('site css callouts', () => {
   )
 })
 
+describe('site css code block wrapper', () => {
+  const wrapperSelector = /\.code-block(?![\w-])/
+
+  it('styles the copy button wrapper as a stylesheet component', () => {
+    let declarations = 0
+    postcss.parse(css).walkRules((rule) => {
+      if (!rule.selectors.some((selector) => wrapperSelector.test(selector))) {
+        return
+      }
+      rule.walkDecls(() => {
+        declarations += 1
+      })
+    })
+    expect(declarations).toBeGreaterThan(0)
+  })
+
+  it('keeps the wrapper itself from scrolling horizontally', () => {
+    const overflows = declaredValues(
+      (selector) =>
+        wrapperSelector.test(selector) && !/\b(pre|button)\b/.test(selector),
+      ['overflow', 'overflow-x']
+    )
+    for (const value of overflows) {
+      expect(value.trim()).not.toMatch(/\b(auto|scroll)\b/)
+    }
+  })
+})
+
 describe('site css contrast', () => {
   it.each(screenPalettes)(
     'body text and links meet AA contrast against the background for %s',

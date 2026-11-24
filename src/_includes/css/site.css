@@ -238,6 +238,23 @@
     overflow-x: auto;
   }
 
+  .code-block {
+    position: relative;
+  }
+
+  .code-block > button {
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    font: inherit;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+  }
+
   .token.keyword {
     color: var(--color-code-keyword);
   }
