@@ -1,0 +1,52 @@
+basics:
+  summary: Backend engineer who builds reliable data pipelines for small teams.
+work:
+  - name: Harbor Analytics
+    position: Senior Engineer
+    startDate: 2018-06
+    endDate: 2021-02
+    location: Ohio
+    highlights:
+      - Cut nightly batch time from six hours to forty minutes.
+      - text: Rebuilt the sync engine around an event log.
+        post: rebuilding-sync
+  - name: Northwind Labs
+    position: Staff Engineer
+    startDate: 2021-03
+    location: Remote
+    description: Logistics software for regional carriers
+    highlights:
+      - Led the migration to a single shared billing service.
+      - Mentored four engineers into senior roles.
+  - name: Fernwood Systems
+    position: Engineer
+    startDate: 2015-09
+    endDate: 2018-05
+    description: Embedded tooling studio
+    highlights:
+      - Shipped the first firmware update channel.
+skills:
+  - name: Languages
+    keywords:
+      - TypeScript
+      - Python
+      - SQL
+  - name: Practices
+    keywords:
+      - Incident response
+      - Code review
+earlier:
+  - name: Pinecrest Software
+    position: Junior Developer
+    startDate: 2012
+    endDate: 2016
+  - name: Copperline Media
+    position: Web Developer
+    startDate: 2009-03
+    endDate: 2011-08
+education:
+  - institution: Lakeshore University
+    studyType: Bachelor of Science
+    area: Computer Science
+    startDate: 2005
+    endDate: 2009

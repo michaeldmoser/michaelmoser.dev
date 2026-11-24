@@ -9,6 +9,7 @@ import type {
 import { eleventyImageTransformPlugin } from '@11ty/eleventy-img'
 import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { build } from 'esbuild'
+import { load } from 'js-yaml'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
@@ -20,6 +21,7 @@ import {
   selectFeatured,
   type Vocabulary
 } from './lib/posts.ts'
+import { checkResume } from './lib/resume.ts'
 import { tsxExtension } from './lib/tsx.ts'
 
 async function bundleBrowserScript(entry: string): Promise<string> {
@@ -108,6 +110,23 @@ function tagPages(collectionApi: CollectionApi) {
         .map(listedPost)
     }))
     .filter((page) => page.posts.length > 0)
+}
+
+function shapedResume(collectionApi: CollectionApi) {
+  const data = collectionApi.getAll()[0]?.data
+  const postSlugs = new Set(
+    orderedPosts(collectionApi).map(
+      (post) => post.url.split('/').filter(Boolean).pop() as string
+    )
+  )
+  const { resume, violations } = checkResume(data?.resume, {
+    postSlugs,
+    siteUrl: data?.site?.url
+  })
+  if (violations.length > 0) {
+    throw new Error(`Invalid resume:\n${violations.join('\n')}`)
+  }
+  return resume
 }
 
 const highlightedLanguages = new Set([
@@ -253,7 +272,9 @@ export default function (eleventyConfig: UserConfig) {
       return false
     }
   )
+  eleventyConfig.addDataExtension('yaml', (contents: string) => load(contents))
   eleventyConfig.addCollection('posts', orderedPosts)
+  eleventyConfig.addCollection('resume', shapedResume)
   eleventyConfig.addCollection('featuredPosts', featuredPosts)
   eleventyConfig.addCollection('tagPages', tagPages)
   eleventyConfig.addGlobalData(

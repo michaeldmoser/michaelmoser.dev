@@ -1,0 +1,31 @@
+basics:
+  summary: Backend engineer who builds reliable data pipelines for small teams.
+work:
+  - name: Harbor Analytics
+    position: Senior Engineer
+    startDate: 2018-06
+    endDate: 2021-02
+    location: Ohio
+    highlights:
+      - Cut nightly batch time from six hours to forty minutes.
+      - text: Rebuilt the sync engine around an event log.
+        post: rebuilding-sync
+  - name: Northwind Labs
+    position: Staff Engineer
+    startDate: 2021-03
+    location: Remote
+    description: Logistics software for regional carriers
+    highlights:
+      - Led the migration to a single shared billing service.
+      - Mentored four engineers into senior roles.
+skills:
+  - name: Languages
+    keywords:
+      - TypeScript
+      - Python
+      - SQL
+earlier:
+  - name: Pinecrest Software
+    position: Junior Developer
+    startDate: 2012
+    endDate: 2016

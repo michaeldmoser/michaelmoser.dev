@@ -1,0 +1,31 @@
+basics:
+  summary: >-
+    Placeholder summary. Staff Software Engineer who builds and runs software
+    for small, fast-moving teams. Real content will replace this before launch.
+
+work:
+  - name: Uplisting
+    position: Staff Software Engineer
+    startDate: "2022-01"
+    location: Remote
+    description: Placeholder company description.
+    highlights:
+      - Placeholder highlight for the current role.
+  - name: Placeholder Company
+    position: Senior Software Engineer
+    startDate: "2018-06"
+    endDate: "2021-12"
+    highlights:
+      - Placeholder highlight for a past role.
+
+skills:
+  - name: Languages
+    keywords:
+      - TypeScript
+      - Ruby
+
+earlier:
+  - name: Placeholder Earlier Company
+    position: Software Engineer
+    startDate: 2012
+    endDate: 2018
