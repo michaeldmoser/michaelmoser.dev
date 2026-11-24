@@ -34,6 +34,13 @@ declare module '@11ty/eleventy' {
     ): void
     addExtension(extension: string, options: TemplateExtension): void
     addPlugin(plugin: unknown, options?: unknown): void
+    on(
+      event: 'eleventy.after',
+      callback: (payload: {
+        results: BuildResult[]
+        outputMode: string
+      }) => void
+    ): void
     amendLibrary(name: string, callback: (library: never) => void): void
   }
 

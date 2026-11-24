@@ -1,12 +1,18 @@
-import { join } from 'node:path'
-import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
+import { copyFileSync, readdirSync } from 'node:fs'
+import { dirname, extname, join } from 'node:path'
+import type {
+  BuildResult,
+  CollectionApi,
+  CollectionItem,
+  UserConfig
+} from '@11ty/eleventy'
 import { eleventyImageTransformPlugin } from '@11ty/eleventy-img'
 import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { build } from 'esbuild'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
-import { altProblem, isLocalImage } from './lib/images.ts'
+import { altProblem, diagramClasses, isLocalImage } from './lib/images.ts'
 import {
   checkPosts,
   draftPolicy,
@@ -36,7 +42,7 @@ function runContext(): RunContext {
   }
 }
 
-function isWritingMarkdown(item: CollectionItem): boolean {
+function isWritingMarkdown(item: Pick<CollectionItem, 'inputPath'>): boolean {
   const segments = item.inputPath.split('/')
   return item.inputPath.endsWith('.md') && segments.includes('writing')
 }
@@ -185,14 +191,39 @@ function requireAltText(md: ImageRenderer) {
     if (problem) {
       throw new Error(problem)
     }
-    if (!isLocalImage(src)) {
+    const classes = isLocalImage(src) ? diagramClasses(src) : []
+    if (!isLocalImage(src) || classes.length > 0) {
       token.attrSet('eleventy:ignore', '')
+    }
+    if (classes.length > 0) {
+      token.attrSet('class', classes.join(' '))
     }
     return render(tokens, idx, options, env, self)
   }
 }
 
+const copiedImageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']
+
+function copyPostImages(results: BuildResult[]) {
+  for (const { inputPath, outputPath } of results) {
+    if (!isWritingMarkdown({ inputPath })) {
+      continue
+    }
+    const sourceDir = dirname(inputPath)
+    for (const name of readdirSync(sourceDir)) {
+      if (copiedImageExtensions.includes(extname(name))) {
+        copyFileSync(join(sourceDir, name), join(dirname(outputPath), name))
+      }
+    }
+  }
+}
+
 export default function (eleventyConfig: UserConfig) {
+  eleventyConfig.on('eleventy.after', ({ results, outputMode }) => {
+    if (outputMode === 'fs') {
+      copyPostImages(results)
+    }
+  })
   eleventyConfig.addPlugin(syntaxHighlight)
   eleventyConfig.htmlTransformer.setPosthtmlProcessOptions({
     recognizeNoValueAttribute: true
