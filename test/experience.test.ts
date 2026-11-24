@@ -181,6 +181,24 @@ describe('experience page with a highlight pointing at a draft post', () => {
   }, 60_000)
 })
 
+describe('experience page with a malformed role', () => {
+  it('fails the build listing each problem on the role that has them', async () => {
+    const outcome = await buildScenario('experience-invalid')
+
+    expect(outcome.error).toBeDefined()
+    const message = outcome.error?.message ?? ''
+    expect(message).toContain('Invalid resume:')
+    const lines = message.split('\n')
+    expect(
+      lines.some(
+        (line) =>
+          line.includes('Harbor Analytics') && line.includes('2021-13')
+      )
+    ).toBe(true)
+    expect(message).toContain('Bozeman, Montana')
+  }, 60_000)
+})
+
 describe('experience page without education', () => {
   it('omits the education section and heading while the rest of the page renders', async () => {
     const outcome = await buildScenario('experience-no-education')
