@@ -47,6 +47,12 @@
     --palette-dark-code-function: #8ab4f8;
     --palette-dark-code-punctuation: #e8e8e8;
 
+    --palette-callout-paper: #eef3fb;
+    --palette-callout-label: #0a3d91;
+
+    --palette-dark-callout-paper: #1c2330;
+    --palette-dark-callout-label: #b3d0ff;
+
     --font-size-0: 1rem;
     --font-size-1: 1.25rem;
     --font-size-2: 1.563rem;
@@ -79,6 +85,14 @@
     --color-accent: light-dark(var(--palette-amber), var(--palette-dark-amber));
     --color-focus: light-dark(var(--palette-focus), var(--palette-dark-focus));
     --color-border: light-dark(var(--palette-gray), var(--palette-dark-gray));
+    --color-callout-surface: light-dark(
+      var(--palette-callout-paper),
+      var(--palette-dark-callout-paper)
+    );
+    --color-callout-label: light-dark(
+      var(--palette-callout-label),
+      var(--palette-dark-callout-label)
+    );
     --color-code-surface: light-dark(
       var(--palette-code-paper),
       var(--palette-dark-code-paper)
@@ -246,6 +260,34 @@
 
   .token.punctuation {
     color: var(--color-code-punctuation);
+  }
+
+  .callout {
+    background-color: var(--color-callout-surface);
+    border-inline-start: var(--space-1) solid var(--color-border);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .callout-note {
+    border-inline-start-color: var(--color-link);
+  }
+
+  .callout-tip {
+    border-inline-start-color: var(--color-code-string);
+  }
+
+  .callout-warning {
+    border-inline-start-color: var(--color-accent);
+  }
+
+  .callout-tradeoff {
+    border-inline-start-color: var(--color-code-keyword);
+  }
+
+  .callout-label {
+    color: var(--color-callout-label);
+    font-weight: bold;
+    margin: 0;
   }
 
   :root[data-theme="dark"] .diagram:not(.no-invert) {

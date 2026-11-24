@@ -323,6 +323,74 @@ describe('site css diagram dark mode filter', () => {
   })
 })
 
+const calloutBase = /\.callout(?![\w-])/
+const calloutTypes = ['note', 'tip', 'warning', 'tradeoff']
+const calloutSurfaceProps = [
+  'background',
+  'background-color',
+  'border',
+  'border-left',
+  'border-inline-start',
+  'border-color',
+  'border-left-color',
+  'border-inline-start-color'
+]
+const calloutBackgroundProps = ['background', 'background-color']
+
+describe('site css callouts', () => {
+  it('sets callouts apart from body text with a border or background from color tokens', () => {
+    const tokens = declaredTokens(css)
+    const values = declaredValues(
+      (selector) => calloutBase.test(selector),
+      calloutSurfaceProps
+    )
+    const referenced = values.flatMap((value) =>
+      [...value.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1])
+    )
+    expect(
+      referenced.filter(
+        (name) => name.startsWith('--color-') && tokens.includes(name)
+      ).length
+    ).toBeGreaterThan(0)
+  })
+
+  it.each(screenPalettes)(
+    'callout label text meets AA contrast against the callout background for %s',
+    (_label, palette) => {
+      const colors = resolveColors(css, palette)
+      const declared = declaredValues(
+        (selector) =>
+          calloutBase.test(selector) ||
+          calloutTypes.some((type) =>
+            new RegExp(`\\.callout-${type}(?![\\w-])`).test(selector)
+          ),
+        calloutBackgroundProps
+      )
+      const backgrounds =
+        declared.length > 0
+          ? declared.map((value) => resolveVar(value, colors))
+          : [colors['--color-surface']]
+      const labelColors = declaredValues(
+        (selector) => /\.callout-label(?![\w-])/.test(selector),
+        ['color']
+      )
+      expect(labelColors.length, 'label has a color rule').toBeGreaterThan(0)
+
+      for (const background of backgrounds) {
+        expect(background).toMatch(/^#[0-9a-f]{6}$/i)
+        for (const value of labelColors) {
+          const color = resolveVar(value, colors)
+          expect(color, 'label color resolves').toMatch(/^#[0-9a-f]{6}$/i)
+          expect(
+            contrastRatio(color, background),
+            `label ${color} against ${background}`
+          ).toBeGreaterThanOrEqual(4.5)
+        }
+      }
+    }
+  )
+})
+
 describe('site css contrast', () => {
   it.each(screenPalettes)(
     'body text and links meet AA contrast against the background for %s',

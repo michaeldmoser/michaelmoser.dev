@@ -1,5 +1,11 @@
+import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildScenario } from './scenario.ts'
+
+const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 
 let outcome: Awaited<ReturnType<typeof buildScenario>>
 let html = ''
@@ -53,6 +59,36 @@ describe('callouts', () => {
     expect(callout('note')).toContain('<strong>bold</strong>')
     expect(callout('tip')).toMatch(/<ul>[\s\S]*<li>first item<\/li>/)
   })
+})
+
+describe('callout site check', () => {
+  let outputDir = ''
+
+  beforeAll(async () => {
+    const built = await buildScenario('callouts', { write: true })
+    expect(built.error).toBeUndefined()
+    outputDir = built.outputDir ?? ''
+  }, 60_000)
+
+  it('reports no undefined callout classes for a post using all four callout types', () => {
+    const env = { ...process.env }
+    delete env.CI
+    delete env.WORKERS_CI
+    delete env.PRIVATE_TERMS
+    const result = spawnSync(
+      process.execPath,
+      ['--import', 'tsx', 'scripts/check-site.ts', outputDir],
+      { cwd: repoRoot, env, encoding: 'utf8' }
+    )
+
+    expect(
+      readFileSync(join(outputDir, 'writing', 'notes', 'index.html'), 'utf8')
+    ).toContain('class="callout')
+    const calloutProblems = result.stderr
+      .split('\n')
+      .filter((line) => /callout/.test(line))
+    expect(calloutProblems).toEqual([])
+  }, 60_000)
 })
 
 describe('callout failures', () => {
