@@ -130,7 +130,7 @@ export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addGlobalData('contactScript', () =>
     bundleBrowserScript('contact.ts')
   )
-  eleventyConfig.addPassthroughCopy('src/assets/css')
+  eleventyConfig.addWatchTarget('src/_includes/css/site.css')
   eleventyConfig.addTemplateFormats('11ty.tsx')
   eleventyConfig.addExtension('11ty.tsx', tsxExtension)
   eleventyConfig.addTemplateFormats('11ty.ts')

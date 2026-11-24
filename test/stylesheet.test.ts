@@ -213,6 +213,58 @@ describe('resolveColors', () => {
   })
 })
 
+const unlayeredTokens = [
+  ':root { color-scheme: light dark; --color-bg: light-dark(#ffffff, #000000); --space-2: 8px; }',
+  ':root[data-theme="dark"] { --color-text: #eeeeee; }',
+  '@media print { :root { --color-bg: #ffffff; --color-border: #000000; } }'
+].join('\n')
+
+const layeredTokens = [
+  '@layer tokens, base, components, utilities;',
+  '@layer tokens {',
+  ':root, :host { color-scheme: light dark; --color-bg: light-dark(#ffffff, #000000); --space-2: 8px; }',
+  ':root[data-theme="dark"], :host([data-theme="dark"]) { --color-text: #eeeeee; }',
+  '@media print { :root, :host { --color-bg: #ffffff; --color-border: #000000; } }',
+  '}'
+].join('\n')
+
+const layeredContexts: Parameters<typeof resolveColors>[1][] = [
+  { os: 'light' },
+  { os: 'dark' },
+  { os: 'light', theme: 'dark' },
+  { os: 'dark', theme: 'light' },
+  { os: 'dark', print: true },
+  { os: 'light', theme: 'dark', print: true }
+]
+
+describe('tokens declared inside a cascade layer', () => {
+  it.each(layeredContexts)(
+    'resolve to the same colors as unlayered root rules for %o',
+    (context) => {
+      const resolved = resolveColors(layeredTokens, context)
+      expect(resolved['--color-bg']).toBeDefined()
+      expect(resolved).toEqual(resolveColors(unlayeredTokens, context))
+    }
+  )
+
+  it('are declared tokens just like unlayered ones', () => {
+    expect([...declaredTokens(layeredTokens)].sort()).toEqual([
+      '--color-bg',
+      '--color-border',
+      '--color-text',
+      '--space-2'
+    ])
+  })
+
+  it('are not reported as raw values, while raw values in layered rules still are', () => {
+    expect(findRawValues(layeredTokens)).toEqual([])
+    const css = `${layeredTokens}\n@layer components { .card { color: #123456; } }`
+    expect(findRawValues(css)).toEqual([
+      { selector: '.card', property: 'color', value: '#123456' }
+    ])
+  })
+})
+
 describe('declaredTokens', () => {
   it('lists custom properties from token blocks including data-theme and print ones', () => {
     const css = [

@@ -88,7 +88,10 @@ function isRaw(property: string, value: string): boolean {
 }
 
 function isTokenBlock(rule: Rule): boolean {
-  const scopedToRoot = rule.selectors.every((s) => s.trim().startsWith(':root'))
+  const scopedToRoot = rule.selectors.every((s) => {
+    const selector = s.trim()
+    return selector.startsWith(':root') || selector.startsWith(':host')
+  })
   if (!scopedToRoot) return false
   return (rule.nodes ?? []).every(
     (node) =>
@@ -140,17 +143,18 @@ function selectorSpecificity(selector: string): number {
   return 1 + (selector.match(/\[/g) ?? []).length
 }
 
-function isPrintBlock(rule: Rule): boolean {
-  const parent = rule.parent
-  return (
-    parent?.type === 'atrule' && (parent as AtRule).params.trim() === 'print'
-  )
-}
-
 function isActive(rule: Rule, context: ColorContext): boolean {
-  const parent = rule.parent
-  if (parent?.type === 'root') return true
-  return isPrintBlock(rule) && context.print === true
+  let printed = false
+  for (let node = rule.parent; node?.type !== 'root'; node = node.parent) {
+    if (node?.type !== 'atrule') return false
+    const atRule = node as AtRule
+    if (atRule.name === 'media' && atRule.params.trim() === 'print') {
+      printed = true
+    } else if (atRule.name !== 'layer') {
+      return false
+    }
+  }
+  return !printed || context.print === true
 }
 
 function tokenBlocks(root: Root): Rule[] {

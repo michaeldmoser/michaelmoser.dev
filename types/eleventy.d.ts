@@ -21,6 +21,7 @@ declare module '@11ty/eleventy' {
       callback: (collectionApi: CollectionApi) => unknown[]
     ): void
     addPassthroughCopy(path: string): void
+    addWatchTarget(path: string): void
     addTemplateFormats(formats: string): void
     addGlobalData(name: string, data: () => unknown): void
     addPreprocessor(
