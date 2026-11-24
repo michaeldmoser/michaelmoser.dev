@@ -5,6 +5,7 @@ import { Header } from '../components/header.tsx'
 
 const navItems = [
   { label: 'Writing', href: '/writing/' },
+  { label: 'Experience', href: '/experience/' },
   { label: 'About', href: '/about/' }
 ]
 

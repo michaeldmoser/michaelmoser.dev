@@ -58,6 +58,7 @@ describe('base layout shell', () => {
 
       expect(anchors(section(html, 'nav')), page.outputPath).toEqual([
         { href: '/writing/', text: 'Writing' },
+        { href: '/experience/', text: 'Experience' },
         { href: '/about/', text: 'About' }
       ])
 
@@ -97,6 +98,7 @@ describe('not found page', () => {
     expect(section(html, 'header')).toContain('<a')
     expect(anchors(section(html, 'nav')).map((link) => link.href)).toEqual([
       '/writing/',
+      '/experience/',
       '/about/'
     ])
     expect(html).toMatch(/<button\b[^>]*\bid="theme-toggle"[^>]*>/)
