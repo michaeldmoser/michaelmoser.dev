@@ -101,16 +101,16 @@ describe('checkResume required fields', () => {
       parts: ['education', '[0]', 'institution'],
       change: (doc: Doc) => delete doc.education[0].institution
     }
-  ])('names the section, entry and field when $field is missing', ({
-    parts,
-    change
-  }) => {
-    const { violations } = checkResume(mutated(change), context)
+  ])(
+    'names the section, entry and field when $field is missing',
+    ({ parts, change }) => {
+      const { violations } = checkResume(mutated(change), context)
 
-    expect(
-      violations.some(line => parts.every(part => line.includes(part)))
-    ).toBe(true)
-  })
+      expect(
+        violations.some((line) => parts.every((part) => line.includes(part)))
+      ).toBe(true)
+    }
+  )
 })
 
 describe('checkResume dates', () => {
@@ -175,7 +175,7 @@ describe('checkResume dates', () => {
     const { violations } = checkResume(mutated(change), context)
 
     expect(
-      violations.some(line => parts.every(part => line.includes(part)))
+      violations.some((line) => parts.every((part) => line.includes(part)))
     ).toBe(true)
   })
 
@@ -232,11 +232,9 @@ describe('checkResume current roles', () => {
     const { violations } = checkResume(mutated(change), context)
 
     for (const name of names) {
-      expect(violations.some(line => line.includes(name))).toBe(true)
+      expect(violations.some((line) => line.includes(name))).toBe(true)
     }
-    expect(
-      violations.some(line => /endDate|current/i.test(line))
-    ).toBe(true)
+    expect(violations.some((line) => /endDate|current/i.test(line))).toBe(true)
   })
 })
 
@@ -274,7 +272,7 @@ describe('checkResume highlight shape', () => {
     const { violations } = checkResume(mutated(change), context)
 
     expect(
-      violations.some(line => parts.every(part => line.includes(part)))
+      violations.some((line) => parts.every((part) => line.includes(part)))
     ).toBe(true)
   })
 
@@ -304,7 +302,7 @@ describe('checkResume location', () => {
     { label: 'a non-US place', value: 'Ontario' }
   ])('names the role and value for $label', ({ value }) => {
     const { violations } = checkResume(
-      mutated(doc => {
+      mutated((doc) => {
         doc.work[0].location = value
       }),
       context
@@ -312,7 +310,7 @@ describe('checkResume location', () => {
 
     expect(
       violations.some(
-        line =>
+        (line) =>
           line.includes('work') &&
           line.includes('Harbor Analytics') &&
           line.includes(value)
@@ -326,7 +324,7 @@ describe('checkResume location', () => {
     { label: 'Remote', value: 'Remote' }
   ])('accepts $label', ({ value }) => {
     const result = checkResume(
-      mutated(doc => {
+      mutated((doc) => {
         doc.work[0].location = value
       }),
       context
@@ -337,7 +335,7 @@ describe('checkResume location', () => {
 
   it('accepts a role with no location', () => {
     const result = checkResume(
-      mutated(doc => {
+      mutated((doc) => {
         delete doc.work[0].location
       }),
       context
@@ -385,7 +383,7 @@ describe('checkResume date order', () => {
     const { violations } = checkResume(mutated(change), context)
 
     expect(
-      violations.some(line => parts.every(part => line.includes(part)))
+      violations.some((line) => parts.every((part) => line.includes(part)))
     ).toBe(true)
   })
 

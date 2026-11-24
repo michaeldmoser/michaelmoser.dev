@@ -44,7 +44,9 @@ describe('experience page', () => {
     expect(current).toContain('Mar 2021 – Present')
     expect(current).toContain('Remote')
     expect(current).toContain('Logistics software for regional carriers')
-    expect(current).toContain('Led the migration to a single shared billing service.')
+    expect(current).toContain(
+      'Led the migration to a single shared billing service.'
+    )
     expect(current).toContain('Mentored four engineers into senior roles.')
 
     const past = roleText(text, 'Harbor Analytics', 'Fernwood Systems')
@@ -53,7 +55,9 @@ describe('experience page', () => {
     expect(past).toContain('Ohio')
     expect(past).not.toContain('Logistics software')
     expect(past).not.toContain('Embedded tooling studio')
-    expect(past).toContain('Cut nightly batch time from six hours to forty minutes.')
+    expect(past).toContain(
+      'Cut nightly batch time from six hours to forty minutes.'
+    )
     expect(past).toContain('Rebuilt the sync engine around an event log.')
 
     const oldest = roleText(text, 'Fernwood Systems', 'Skills')
@@ -119,7 +123,9 @@ describe('experience page post-linked highlights', () => {
     )
 
     const linked = anchors.filter((anchor) =>
-      visibleText(anchor).includes('Rebuilt the sync engine around an event log.')
+      visibleText(anchor).includes(
+        'Rebuilt the sync engine around an event log.'
+      )
     )
     expect(linked).toHaveLength(1)
     expect(linked[0]).toMatch(/href="\/writing\/rebuilding-sync\/"/)
@@ -133,6 +139,48 @@ describe('experience page post-linked highlights', () => {
       'Cut nightly batch time from six hours to forty minutes.'
     )
   })
+})
+
+describe('experience page print URLs', () => {
+  function anchorsIn(html: string) {
+    return [...html.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
+      (match) => match[0]
+    )
+  }
+
+  it('gives a post link its absolute print URL and leaves plain highlights without one', () => {
+    const anchors = anchorsIn(main)
+    const linked = anchors.filter((anchor) =>
+      visibleText(anchor).includes(
+        'Rebuilt the sync engine around an event log.'
+      )
+    )
+    expect(linked).toHaveLength(1)
+    expect(linked[0]).toContain(
+      'data-print-url="https://michaelmoser.dev/writing/rebuilding-sync/"'
+    )
+    expect(main).not.toMatch(
+      /data-print-url="(?!https:\/\/michaelmoser\.dev\/writing\/rebuilding-sync\/")/
+    )
+    expect(main.match(/data-print-url=/g)).toHaveLength(1)
+  })
+
+  it('derives the print URL origin from the configured site url', async () => {
+    const outcome = await buildScenario('experience-site-url')
+    const page = outcome.results?.find(
+      (result) => result.url === '/experience/'
+    )
+    const html = page?.content.match(/<main[\s>]([\s\S]*)<\/main>/)?.[1] ?? ''
+    const linked = anchorsIn(html).filter((anchor) =>
+      visibleText(anchor).includes(
+        'Rebuilt the sync engine around an event log.'
+      )
+    )
+    expect(linked).toHaveLength(1)
+    expect(linked[0]).toContain(
+      'data-print-url="https://staging.example.test/writing/rebuilding-sync/"'
+    )
+  }, 60_000)
 })
 
 describe('experience page with a highlight pointing at a missing post', () => {
@@ -174,7 +222,9 @@ describe('experience page with a highlight pointing at a draft post', () => {
       (match) => match[0]
     )
     const linked = anchors.filter((anchor) =>
-      visibleText(anchor).includes('Wrote up the migration plan before it shipped.')
+      visibleText(anchor).includes(
+        'Wrote up the migration plan before it shipped.'
+      )
     )
     expect(linked).toHaveLength(1)
     expect(linked[0]).toMatch(/href="\/writing\/unfinished-thoughts\/"/)
@@ -191,8 +241,7 @@ describe('experience page with a malformed role', () => {
     const lines = message.split('\n')
     expect(
       lines.some(
-        (line) =>
-          line.includes('Harbor Analytics') && line.includes('2021-13')
+        (line) => line.includes('Harbor Analytics') && line.includes('2021-13')
       )
     ).toBe(true)
     expect(message).toContain('Bozeman, Montana')

@@ -27,7 +27,12 @@ export default class Experience {
               {role.highlights.map((highlight) => (
                 <li>
                   {highlight.href ? (
-                    <a href={highlight.href}>{highlight.text}</a>
+                    <a
+                      href={highlight.href}
+                      data-print-url={highlight.printUrl}
+                    >
+                      {highlight.text}
+                    </a>
                   ) : (
                     highlight.text
                   )}

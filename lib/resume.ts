@@ -85,7 +85,7 @@ function formatMonth(date: string): string {
   return `${months[Number(month) - 1]} ${year}`
 }
 
-function shapeRole(role: RawRole): Role {
+function shapeRole(role: RawRole, siteUrl: string): Role {
   const end = role.endDate ? formatMonth(role.endDate) : 'Present'
   return {
     name: role.name,
@@ -98,7 +98,10 @@ function shapeRole(role: RawRole): Role {
         ? { text: highlight }
         : {
             text: highlight.text,
-            href: highlight.post ? `/writing/${highlight.post}/` : undefined
+            href: highlight.post ? `/writing/${highlight.post}/` : undefined,
+            printUrl: highlight.post
+              ? `${siteUrl}/writing/${highlight.post}/`
+              : undefined
           }
     )
   }
@@ -229,9 +232,7 @@ function locationProblems(entry: Entry): string[] {
   }
   return typeof location === 'string' && allowedLocations.has(location)
     ? []
-    : [
-        `location "${String(location)}" is not Remote or a full US state name`
-      ]
+    : [`location "${String(location)}" is not Remote or a full US state name`]
 }
 
 const sections: Section[] = [
@@ -268,7 +269,8 @@ const sections: Section[] = [
 function entryLabel(section: Section, entry: Entry, index: number): string {
   const name = entry[section.nameField]
   const position = section.hasPosition ? entry.position : undefined
-  const identified = Boolean(name) && (!section.hasPosition || Boolean(position))
+  const identified =
+    Boolean(name) && (!section.hasPosition || Boolean(position))
   const head = identified ? section.name : `${section.name}[${index}]`
   const who = [name, position].filter(Boolean).join(' — ')
   return who ? `${head} ${who}` : head
@@ -348,11 +350,11 @@ function entryViolations(
 }
 
 function currentRoleViolations(raw: Record<string, unknown>): string[] {
-  const workSection = sections.find((section) => section.name === 'work')!
+  const workSection = sections.find((section) => section.name === 'work')
   const current = ((raw.work ?? []) as Entry[])
     .map((entry, index) => ({ entry, index }))
     .filter(({ entry }) => isBlank(entry.endDate))
-  if (current.length < 2) {
+  if (!workSection || current.length < 2) {
     return []
   }
   return current.map(
@@ -363,9 +365,7 @@ function currentRoleViolations(raw: Record<string, unknown>): string[] {
 
 function requiredFieldViolations(raw: Record<string, unknown>): string[] {
   const basics = (raw.basics ?? {}) as Entry
-  const summary = basics.summary
-    ? []
-    : ['basics: summary is missing']
+  const summary = basics.summary ? [] : ['basics: summary is missing']
   return [
     ...summary,
     ...sections.flatMap((section) =>
@@ -395,7 +395,7 @@ export function checkResume(
   return {
     resume: {
       summary: basics.summary,
-      work: newestFirst.map(shapeRole),
+      work: newestFirst.map((role) => shapeRole(role, context.siteUrl)),
       skills: (skills ?? []).map((group) => ({
         name: group.name,
         keywords: group.keywords ?? []

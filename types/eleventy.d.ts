@@ -21,7 +21,7 @@ declare module '@11ty/eleventy' {
     }
     addCollection(
       name: string,
-      callback: (collectionApi: CollectionApi) => unknown[]
+      callback: (collectionApi: CollectionApi) => unknown
     ): void
     addPassthroughCopy(path: string): void
     addWatchTarget(path: string): void
@@ -33,6 +33,10 @@ declare module '@11ty/eleventy' {
       callback: (data: never, content: string) => unknown
     ): void
     addExtension(extension: string, options: TemplateExtension): void
+    addDataExtension(
+      extension: string,
+      parser: (contents: string) => unknown
+    ): void
     addPlugin(plugin: unknown, options?: unknown): void
     on(
       event: 'eleventy.after',

@@ -121,7 +121,7 @@ function shapedResume(collectionApi: CollectionApi) {
   )
   const { resume, violations } = checkResume(data?.resume, {
     postSlugs,
-    siteUrl: data?.site?.url
+    siteUrl: (data?.site as { url: string } | undefined)?.url ?? ''
   })
   if (violations.length > 0) {
     throw new Error(`Invalid resume:\n${violations.join('\n')}`)
