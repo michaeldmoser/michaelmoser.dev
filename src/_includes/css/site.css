@@ -1,6 +1,8 @@
 @layer tokens, base, components, utilities;
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
-@source "../../**/*.{md,tsx}";
+@source "../../**/*.tsx";
+@source not "../components/card.tsx";
+@source not inline("hidden");
 
 @theme inline reference {
   --color-*: initial;
@@ -124,12 +126,6 @@
 }
 
 @layer components {
-  @media print {
-    .no-print {
-      display: none;
-    }
-  }
-
   .site-header {
     display: flex;
     flex-wrap: wrap;
@@ -175,5 +171,11 @@
 
   .prose {
     max-width: var(--measure);
+  }
+
+  @media print {
+    .no-print {
+      display: none;
+    }
   }
 }

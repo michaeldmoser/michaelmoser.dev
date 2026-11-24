@@ -127,9 +127,12 @@ describe('site css theme selection', () => {
     ['dark OS', { os: 'dark' }, darkValues],
     ['chosen light theme', { os: 'dark', theme: 'light' }, lightValues],
     ['chosen dark theme', { os: 'light', theme: 'dark' }, darkValues]
-  ] as const)('holds the exact semantic token values for %s', (_l, palette, values) => {
-    expect(resolveColors(css, palette)).toMatchObject(values)
-  })
+  ] as const)(
+    'holds the exact semantic token values for %s',
+    (_l, palette, values) => {
+      expect(resolveColors(css, palette)).toMatchObject(values)
+    }
+  )
 })
 
 type Palette = {

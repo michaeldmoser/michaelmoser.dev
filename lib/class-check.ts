@@ -1,5 +1,7 @@
 import type { Problem } from './site-check.ts'
 
+export const SITE_CSS_PATH = 'assets/css/site.css'
+
 type Page = { file: string; html: string }
 
 function classesUsed(html: string): string[] {
@@ -13,7 +15,9 @@ function isArbitraryValue(className: string): boolean {
 }
 
 function classesDefined(css: string): Set<string> {
-  const selectors = [...css.matchAll(/([^{};]*)\{/g)]
+  const selectors = [
+    ...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{};]*)\{/g)
+  ]
     .map((match) => match[1].trim())
     .filter((prelude) => !prelude.startsWith('@'))
   return new Set(
@@ -25,7 +29,10 @@ function classesDefined(css: string): Set<string> {
   )
 }
 
-function problemMessage(className: string, defined: Set<string>): string | null {
+function problemMessage(
+  className: string,
+  defined: Set<string>
+): string | null {
   if (isArbitraryValue(className)) {
     return `arbitrary-value class ${className}`
   }
