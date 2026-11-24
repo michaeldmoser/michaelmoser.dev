@@ -274,9 +274,13 @@ function entryLabel(section: Section, entry: Entry, index: number): string {
   return who ? `${head} ${who}` : head
 }
 
+function isBlank(value: unknown): boolean {
+  return value === undefined || value === null || value === ''
+}
+
 function problemOf(entry: Entry, field: string): string | undefined {
   const value = entry[field]
-  if (value === undefined || value === null || value === '') {
+  if (isBlank(value)) {
     return `${field} is missing`
   }
   if (field === 'keywords' && Array.isArray(value) && value.length === 0) {
@@ -297,7 +301,7 @@ function dateProblem(
   pattern: RegExp
 ): string | undefined {
   const value = entry[field]
-  if (value === undefined || value === null || value === '') {
+  if (isBlank(value)) {
     return undefined
   }
   const text = dateText(value)
@@ -309,10 +313,7 @@ function dateProblem(
 
 function orderProblem(entry: Entry, pattern: RegExp): string | undefined {
   const [start, end] = dateFields.map((field) =>
-    entry[field] === undefined ||
-    entry[field] === null ||
-    entry[field] === '' ||
-    dateProblem(entry, field, pattern)
+    isBlank(entry[field]) || dateProblem(entry, field, pattern)
       ? undefined
       : dateText(entry[field])
   )
@@ -347,10 +348,10 @@ function entryViolations(
 }
 
 function currentRoleViolations(raw: Record<string, unknown>): string[] {
-  const [workSection] = sections
+  const workSection = sections.find((section) => section.name === 'work')!
   const current = ((raw.work ?? []) as Entry[])
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry }) => problemOf(entry, 'endDate'))
+    .filter(({ entry }) => isBlank(entry.endDate))
   if (current.length < 2) {
     return []
   }
