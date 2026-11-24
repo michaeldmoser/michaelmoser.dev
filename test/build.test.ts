@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import postcss from 'postcss'
@@ -164,11 +163,9 @@ describe('print markers', () => {
     }
   })
 
-  it('hides no-print elements with display none inside the print media block of site.css', () => {
-    const css = readFileSync(
-      new URL('../src/assets/css/site.css', import.meta.url),
-      'utf8'
-    )
+  it('hides no-print elements with display none inside the print media block of site.css', async () => {
+    const { compileSiteCss } = await import('../src/_includes/site-css.ts')
+    const css = await compileSiteCss()
     const hidden: string[] = []
     postcss.parse(css).walkAtRules('media', (media) => {
       if (!/\bprint\b/.test(media.params)) return

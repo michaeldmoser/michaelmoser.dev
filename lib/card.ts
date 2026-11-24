@@ -10,7 +10,7 @@ export type CardPalette = { background: string; text: string; accent: string }
 export function cardPalette(css: string): CardPalette {
   const colors = resolveColors(css, { os: 'dark', theme: 'dark' })
   return {
-    background: colors['--color-bg'],
+    background: colors['--color-surface'],
     text: colors['--color-text'],
     accent: colors['--palette-dark-amber']
   }

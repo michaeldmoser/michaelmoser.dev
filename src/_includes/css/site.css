@@ -38,7 +38,7 @@
   color-scheme: light dark;
 
   --color-text: light-dark(var(--palette-ink), var(--palette-dark-ink));
-  --color-bg: light-dark(var(--palette-paper), var(--palette-dark-paper));
+  --color-surface: light-dark(var(--palette-paper), var(--palette-dark-paper));
   --color-link: light-dark(var(--palette-blue), var(--palette-dark-blue));
   --color-accent: light-dark(var(--palette-amber), var(--palette-dark-amber));
   --color-focus: light-dark(var(--palette-focus), var(--palette-dark-focus));
@@ -68,7 +68,7 @@
 
 body {
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background-color: var(--color-surface);
   font-family: var(--font-body);
   font-size: var(--font-size-0);
   line-height: var(--line-height-body);

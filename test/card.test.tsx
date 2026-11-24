@@ -1,11 +1,8 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { cardPalette, toSatoriNode } from '../lib/card.ts'
+import { compileSiteCss } from '../src/_includes/site-css.ts'
 
-const css = readFileSync(
-  new URL('../src/assets/css/site.css', import.meta.url),
-  'utf8'
-)
+const css = await compileSiteCss()
 
 describe('cardPalette', () => {
   it('uses the dark paper as background, dark ink as text and dark amber as accent from site.css', () => {
@@ -18,10 +15,11 @@ describe('cardPalette', () => {
 
   it('follows site.css when the dark amber changes', () => {
     const changed = css.replace(
-      '--palette-dark-amber: #f0b45c;',
-      '--palette-dark-amber: #123456;'
+      /(--palette-dark-amber:\s*)#f0b45c/,
+      '$1#123456'
     )
 
+    expect(changed).not.toBe(css)
     expect(cardPalette(changed).accent).toBe('#123456')
   })
 })

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cardPalette } from '#lib/card.ts'
+import { compileSiteCss } from './site-css.ts'
 
 const fontsDir = join(import.meta.dirname, 'fonts')
 
@@ -9,6 +10,4 @@ export const fonts = {
   bold: readFileSync(join(fontsDir, 'Inter-Bold.ttf'))
 }
 
-export const palette = cardPalette(
-  readFileSync(join(import.meta.dirname, '../assets/css/site.css'), 'utf8')
-)
+export const palette = cardPalette(await compileSiteCss())
