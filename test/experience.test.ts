@@ -112,6 +112,75 @@ describe('experience page', () => {
   })
 })
 
+describe('experience page post-linked highlights', () => {
+  it('links a post highlight to its writing page and leaves plain highlights unlinked', () => {
+    const anchors = [...main.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
+      (match) => match[0]
+    )
+
+    const linked = anchors.filter((anchor) =>
+      visibleText(anchor).includes('Rebuilt the sync engine around an event log.')
+    )
+    expect(linked).toHaveLength(1)
+    expect(linked[0]).toMatch(/href="\/writing\/rebuilding-sync\/"/)
+
+    for (const anchor of anchors) {
+      expect(visibleText(anchor)).not.toContain(
+        'Cut nightly batch time from six hours to forty minutes.'
+      )
+    }
+    expect(visibleText(main)).toContain(
+      'Cut nightly batch time from six hours to forty minutes.'
+    )
+  })
+})
+
+describe('experience page with a highlight pointing at a missing post', () => {
+  it('fails the build naming the role and the missing slug', async () => {
+    const outcome = await buildScenario('experience-dead-slug')
+
+    expect(outcome.error).toBeDefined()
+    const message = outcome.error?.message ?? ''
+    expect(message).toContain('Invalid resume:')
+    expect(message).toContain('Harbor Analytics')
+    expect(message).toContain('Senior Engineer')
+    expect(message).toContain('vanished-post-slug')
+  }, 60_000)
+})
+
+describe('experience page with a highlight pointing at a draft post', () => {
+  it('fails a production build naming the role and the draft slug as no such post', async () => {
+    const outcome = await buildScenario('experience-draft-link')
+
+    expect(outcome.error).toBeDefined()
+    const message = outcome.error?.message ?? ''
+    expect(message).toContain('Invalid resume:')
+    expect(message).toContain('Harbor Analytics')
+    expect(message).toContain('Senior Engineer')
+    expect(message).toContain('unfinished-thoughts')
+  }, 60_000)
+
+  it('links the draft post from the highlight when serving locally', async () => {
+    const outcome = await buildScenario('experience-draft-link', {
+      runMode: 'serve'
+    })
+
+    expect(outcome.error).toBeUndefined()
+    const page = outcome.results?.find(
+      (result) => result.url === '/experience/'
+    )
+    const html = page?.content.match(/<main[\s>]([\s\S]*)<\/main>/)?.[1] ?? ''
+    const anchors = [...html.matchAll(/<a\s[^>]*>[\s\S]*?<\/a>/g)].map(
+      (match) => match[0]
+    )
+    const linked = anchors.filter((anchor) =>
+      visibleText(anchor).includes('Wrote up the migration plan before it shipped.')
+    )
+    expect(linked).toHaveLength(1)
+    expect(linked[0]).toMatch(/href="\/writing\/unfinished-thoughts\/"/)
+  }, 60_000)
+})
+
 describe('experience page without education', () => {
   it('omits the education section and heading while the rest of the page renders', async () => {
     const outcome = await buildScenario('experience-no-education')

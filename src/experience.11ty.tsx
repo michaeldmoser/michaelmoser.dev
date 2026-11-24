@@ -25,7 +25,13 @@ export default class Experience {
             {role.description ? <p>{role.description}</p> : null}
             <ul>
               {role.highlights.map((highlight) => (
-                <li>{highlight.text}</li>
+                <li>
+                  {highlight.href ? (
+                    <a href={highlight.href}>{highlight.text}</a>
+                  ) : (
+                    highlight.text
+                  )}
+                </li>
               ))}
             </ul>
           </section>

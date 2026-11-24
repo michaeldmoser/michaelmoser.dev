@@ -1,0 +1,27 @@
+basics:
+  summary: Backend engineer who builds reliable data pipelines for small teams.
+work:
+  - name: Harbor Analytics
+    position: Senior Engineer
+    startDate: 2018-06
+    endDate: 2021-02
+    location: Ohio
+    highlights:
+      - text: Rebuilt the sync engine around an event log.
+        post: vanished-post-slug
+skills:
+  - name: Languages
+    keywords:
+      - TypeScript
+      - Python
+earlier:
+  - name: Pinecrest Software
+    position: Junior Developer
+    startDate: 2012
+    endDate: 2016
+education:
+  - institution: Lakeshore University
+    studyType: Bachelor of Science
+    area: Computer Science
+    startDate: 2005
+    endDate: 2009

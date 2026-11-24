@@ -27,6 +27,7 @@ export interface ResumeContext {
 
 interface RawHighlight {
   text: string
+  post?: string
 }
 
 interface RawRole {
@@ -92,9 +93,14 @@ function shapeRole(role: RawRole): Role {
     dateRange: `${formatMonth(role.startDate)} – ${end}`,
     location: role.location,
     description: role.description,
-    highlights: (role.highlights ?? []).map((highlight) => ({
-      text: typeof highlight === 'string' ? highlight : highlight.text
-    }))
+    highlights: (role.highlights ?? []).map((highlight) =>
+      typeof highlight === 'string'
+        ? { text: highlight }
+        : {
+            text: highlight.text,
+            href: highlight.post ? `/writing/${highlight.post}/` : undefined
+          }
+    )
   }
 }
 
@@ -105,11 +111,32 @@ function yearsOf(startDate?: RawDate, endDate?: RawDate): string | undefined {
   return years.length > 0 ? years.join('–') : undefined
 }
 
+function unknownPostViolations(
+  work: RawRole[],
+  postSlugs: ReadonlySet<string>
+): string[] {
+  return work.flatMap((role) =>
+    (role.highlights ?? []).flatMap((highlight) =>
+      typeof highlight !== 'string' &&
+      highlight.post &&
+      !postSlugs.has(highlight.post)
+        ? [
+            `work ${role.name} — ${role.position}: post "${highlight.post}" does not exist`
+          ]
+        : []
+    )
+  )
+}
+
 export function checkResume(
   raw: unknown,
-  _context: ResumeContext
+  context: ResumeContext
 ): { resume: Resume | null; violations: string[] } {
   const { basics, work, skills, earlier, education } = raw as RawResume
+  const violations = unknownPostViolations(work, context.postSlugs)
+  if (violations.length > 0) {
+    return { resume: null, violations }
+  }
   const newestFirst = [...work].sort((a, b) =>
     String(b.startDate).localeCompare(String(a.startDate))
   )
@@ -133,6 +160,6 @@ export function checkResume(
         years: yearsOf(entry.startDate, entry.endDate)
       }))
     },
-    violations: []
+    violations
   }
 }
