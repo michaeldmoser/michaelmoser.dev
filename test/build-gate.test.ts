@@ -96,6 +96,47 @@ describe('check-site runner', () => {
     )
   })
 
+  const writeStyledSite = async (body: string) => {
+    const dir = await mkdtemp(join(tmpdir(), 'build-gate-'))
+    dirs.push(dir)
+    await mkdir(join(dir, 'assets', 'css'), { recursive: true })
+    await writeFile(
+      join(dir, 'assets', 'css', 'site.css'),
+      '@layer tokens, base, components, utilities;\n\n@layer components {\n  .prose {\n    line-height: 1.5;\n  }\n}\n'
+    )
+    await writeFile(
+      join(dir, 'index.html'),
+      page(body).replace(
+        '</head>',
+        '<link rel="stylesheet" href="/assets/css/site.css">\n</head>'
+      )
+    )
+    return dir
+  }
+
+  it('exits 0 for Prism token and language classes the stylesheet does not define', async () => {
+    const dir = await writeStyledSite(
+      '<pre class="language-js"><code class="language-js"><span class="token keyword">const</span> x <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span></code></pre>'
+    )
+
+    const result = runChecker(dir)
+
+    expect(result.stderr).not.toMatch(/token|language-/)
+    expect(result.status, result.stderr).toBe(0)
+  })
+
+  it('still exits 1 for an undefined class outside a token attribute next to Prism markup', async () => {
+    const dir = await writeStyledSite(
+      '<pre class="language-js"><code class="language-js"><span class="token keyword">const</span></code></pre><p class="text-blue">Raw</p>'
+    )
+
+    const result = runChecker(dir)
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('text-blue')
+    expect(result.stderr).not.toMatch(/token|language-/)
+  })
+
   it('exits 0 for the real site built from src', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'build-gate-'))
     dirs.push(dir)

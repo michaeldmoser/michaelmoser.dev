@@ -30,6 +30,8 @@ declare module '@11ty/eleventy' {
       callback: (data: never, content: string) => unknown
     ): void
     addExtension(extension: string, options: TemplateExtension): void
+    addPlugin(plugin: unknown): void
+    amendLibrary(name: string, callback: (library: never) => void): void
   }
 
   export interface BuildResult {

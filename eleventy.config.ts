@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
+import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { build } from 'esbuild'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
 import {
@@ -99,7 +100,46 @@ function tagPages(collectionApi: CollectionApi) {
     .filter((page) => page.posts.length > 0)
 }
 
+const highlightedLanguages = new Set([
+  'ruby',
+  'erb',
+  'javascript',
+  'typescript',
+  'jsx',
+  'tsx',
+  'handlebars',
+  'hcl',
+  'yaml',
+  'sql',
+  'bash',
+  'dockerfile',
+  'json',
+  'python'
+])
+
+type Highlight = (code: string, language: string, attrs: string) => string
+
+interface MarkdownLibrary {
+  options: { highlight?: Highlight | null }
+  utils: { escapeHtml(text: string): string }
+  set(options: { highlight: Highlight }): void
+}
+
+function restrictHighlighting(md: MarkdownLibrary) {
+  const highlight = md.options.highlight
+  md.set({
+    highlight: (code, language, attrs) => {
+      if (!highlight || !highlightedLanguages.has(language.split('/')[0])) {
+        return `<pre><code>${md.utils.escapeHtml(code)}</code></pre>`
+      }
+      return highlight(code, language, attrs)
+    }
+  })
+}
+
 export default function (eleventyConfig: UserConfig) {
+  eleventyConfig.addPlugin(syntaxHighlight)
+  eleventyConfig.amendLibrary('md', restrictHighlighting)
   eleventyConfig.addPreprocessor(
     'excludeDrafts',
     'md',

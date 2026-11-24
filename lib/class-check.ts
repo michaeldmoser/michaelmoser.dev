@@ -4,9 +4,22 @@ export const SITE_CSS_PATH = 'assets/css/site.css'
 
 type Page = { file: string; html: string }
 
+function isPrismClass(className: string): boolean {
+  return className.startsWith('language-')
+}
+
+function checkableClasses(names: string[]): string[] {
+  return names.includes('token')
+    ? []
+    : names.filter((name) => !isPrismClass(name))
+}
+
 function classesUsed(html: string): string[] {
   return [...html.matchAll(/\sclass\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].flatMap(
-    (match) => (match[1] ?? match[2]).split(/\s+/).filter((name) => name !== '')
+    (match) =>
+      checkableClasses(
+        (match[1] ?? match[2]).split(/\s+/).filter((name) => name !== '')
+      )
   )
 }
 
