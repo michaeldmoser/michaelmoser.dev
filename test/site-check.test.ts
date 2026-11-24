@@ -128,6 +128,22 @@ describe('checkSite', () => {
     }
   })
 
+  it('reports an arbitrary-value class against the page that uses it', async () => {
+    const result = await checkSite(outputDir('arbitrary-class'), options)
+
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0].file).toBe('index.html')
+    expect(result.errors[0].message).toContain('text-[#333]')
+  })
+
+  it('reports a class the built css defines neither as a utility nor a component against the page that uses it', async () => {
+    const result = await checkSite(outputDir('undefined-class'), options)
+
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0].file).toBe('index.html')
+    expect(result.errors[0].message).toContain('text-blue')
+  })
+
   describe('denylisted private terms', () => {
     const termsFile = fileURLToPath(
       new URL('./fixtures/private-terms.txt', import.meta.url)

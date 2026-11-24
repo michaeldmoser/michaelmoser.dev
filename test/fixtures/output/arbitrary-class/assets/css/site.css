@@ -1,0 +1,7 @@
+@layer tokens, base, components, utilities;
+
+@layer components {
+  .prose {
+    line-height: 1.5;
+  }
+}

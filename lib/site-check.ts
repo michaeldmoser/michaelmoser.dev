@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { access, readdir, readFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 import { HtmlValidate } from 'html-validate'
+import { classProblems } from './class-check.ts'
 import { isCi } from './posts.ts'
 
 export type Problem = { file: string; message: string }
@@ -22,6 +23,8 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 const SITE_ORIGIN = 'https://michaelmoser.dev'
+
+const SITE_CSS_PATH = 'assets/css/site.css'
 
 async function listFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { recursive: true, withFileTypes: true })
@@ -257,10 +260,16 @@ export async function checkSite(
   const paths = await listFiles(dir)
   const files = new Set(paths)
   const validator = await createValidator()
+  const pages: { file: string; html: string }[] = []
   for (const page of paths.filter((path) => path.endsWith('.html'))) {
     const html = await readFile(join(dir, page), 'utf8')
+    pages.push({ file: page, html })
     errors.push(...missingReferenceProblems(page, html, files))
     errors.push(...(await invalidHtmlProblems(validator, page, html)))
+  }
+  if (files.has(SITE_CSS_PATH)) {
+    const css = await readFile(join(dir, SITE_CSS_PATH), 'utf8')
+    errors.push(...classProblems(pages, css))
   }
   const terms = await loadTerms(options)
   errors.push(
