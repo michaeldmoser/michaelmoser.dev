@@ -5,6 +5,7 @@ import { build } from 'esbuild'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
+import { altProblem } from './lib/images.ts'
 import {
   checkPosts,
   draftPolicy,
@@ -153,9 +154,46 @@ function addCallouts(md: unknown) {
   })
 }
 
+interface ImageToken {
+  content: string
+  attrGet(name: string): string | null
+}
+
+type ImageRule = (
+  tokens: ImageToken[],
+  idx: number,
+  options: unknown,
+  env: { page: { inputPath: string } },
+  self: unknown
+) => string
+
+interface ImageRenderer {
+  renderer: {
+    rules: { image: ImageRule }
+    renderToken: ImageRule
+  }
+}
+
+function requireAltText(md: ImageRenderer) {
+  const render = md.renderer.rules.image
+  md.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const problem = altProblem(
+      token.attrGet('src') ?? '',
+      token.content,
+      env.page.inputPath
+    )
+    if (problem) {
+      throw new Error(problem)
+    }
+    return render(tokens, idx, options, env, self)
+  }
+}
+
 export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addPlugin(syntaxHighlight)
   eleventyConfig.amendLibrary('md', restrictHighlighting)
+  eleventyConfig.amendLibrary('md', requireAltText)
   eleventyConfig.amendLibrary('md', addCallouts)
   eleventyConfig.addPreprocessor(
     'excludeDrafts',
