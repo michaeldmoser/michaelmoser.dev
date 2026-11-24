@@ -17,12 +17,14 @@ export default class Experience {
         <h1>Experience</h1>
         <p>{summary}</p>
         {work.map((role) => (
-          <section>
+          <section class='resume-role'>
             <h2>{role.name}</h2>
-            <p>{role.position}</p>
-            <p>{role.dateRange}</p>
-            {role.location ? <p>{role.location}</p> : null}
-            {role.description ? <p>{role.description}</p> : null}
+            <p class='resume-meta'>{role.position}</p>
+            <p class='resume-meta'>{role.dateRange}</p>
+            {role.location ? <p class='resume-meta'>{role.location}</p> : null}
+            {role.description ? (
+              <p class='resume-meta'>{role.description}</p>
+            ) : null}
             <ul>
               {role.highlights.map((highlight) => (
                 <li>
@@ -42,16 +44,16 @@ export default class Experience {
           </section>
         ))}
         {skills.map((group) => (
-          <section>
+          <section class='resume-role'>
             <h2>{group.name}</h2>
-            <ul>
+            <ul class='resume-skills'>
               {group.keywords.map((keyword) => (
                 <li>{keyword}</li>
               ))}
             </ul>
           </section>
         ))}
-        <section>
+        <section class='resume-role'>
           <h2>Earlier experience</h2>
           {earlier.map((role) => (
             <p>
@@ -60,7 +62,7 @@ export default class Experience {
           ))}
         </section>
         {education.length > 0 ? (
-          <section>
+          <section class='resume-role'>
             <h2>Education</h2>
             {education.map((entry) => (
               <p>
