@@ -70,6 +70,9 @@ export default function base(data: {
           <link rel='stylesheet' href='/assets/css/site.css' />
           <script src='/assets/js/theme.js' defer></script>
           <script src='/assets/js/contact.js' defer></script>
+          {data.isPost ? (
+            <script src='/assets/js/copy-code.js' defer></script>
+          ) : null}
         </head>
         <body>
           <Header items={navItems} />

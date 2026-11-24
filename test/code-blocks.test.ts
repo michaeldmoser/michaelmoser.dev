@@ -64,3 +64,33 @@ describe('code blocks', () => {
     expect(html).toMatch(/<pre><code>mystery fence content/)
   })
 })
+
+describe('copy button without JavaScript', () => {
+  function pageHtml(url: string) {
+    return outcome.results?.find((result) => result.url === url)?.content ?? ''
+  }
+
+  it('renders no copy button in the post HTML', () => {
+    const buttons = [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/gi)]
+    expect(buttons.filter((button) => /copy/i.test(button[0]))).toEqual([])
+    const blocks = [...html.matchAll(/<pre\b[\s\S]*?<\/pre>/g)]
+    expect(blocks.filter((block) => /<button\b/i.test(block[0]))).toEqual([])
+  })
+
+  it('loads the deferred copy-code script on a post and builds the asset', () => {
+    expect(html).toMatch(
+      /<script\b(?=[^>]*\bsrc="\/assets\/js\/copy-code\.js")(?=[^>]*\bdefer\b)[^>]*>/
+    )
+    expect(
+      outcome.results?.some(
+        (result) => result.url === '/assets/js/copy-code.js'
+      )
+    ).toBe(true)
+  })
+
+  it.each(['/', '/writing/'])('does not load the script on %s', (url) => {
+    const page = pageHtml(url)
+    expect(page).not.toBe('')
+    expect(page).not.toContain('copy-code.js')
+  })
+})
