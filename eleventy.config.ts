@@ -2,6 +2,8 @@ import { join } from 'node:path'
 import type { CollectionApi, CollectionItem, UserConfig } from '@11ty/eleventy'
 import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { build } from 'esbuild'
+import markdownItContainer from 'markdown-it-container'
+import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
 import {
   checkPosts,
@@ -137,9 +139,24 @@ function restrictHighlighting(md: MarkdownLibrary) {
   })
 }
 
+function addCallouts(md: unknown) {
+  markdownItContainer(md, 'callout', {
+    validate: () => true,
+    render: (tokens, idx, _options, env) => {
+      const { info, nesting } = tokens[idx]
+      if (nesting !== 1) {
+        return '</aside>\n'
+      }
+      const type = parseCalloutType(info, env.page.inputPath)
+      return `<aside class="callout callout-${type}">\n<p class="callout-label">${calloutLabel(type)}</p>\n`
+    }
+  })
+}
+
 export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addPlugin(syntaxHighlight)
   eleventyConfig.amendLibrary('md', restrictHighlighting)
+  eleventyConfig.amendLibrary('md', addCallouts)
   eleventyConfig.addPreprocessor(
     'excludeDrafts',
     'md',
