@@ -1,149 +1,179 @@
 @layer tokens, base, components, utilities;
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../../**/*.{md,tsx}";
 
-:root {
-  --palette-ink: #1a1a1a;
-  --palette-paper: #ffffff;
-  --palette-blue: #0b57d0;
-  --palette-amber: #8a4b00;
-  --palette-focus: #0a3d91;
-  --palette-gray: #767676;
-
-  --palette-dark-ink: #e8e8e8;
-  --palette-dark-paper: #121212;
-  --palette-dark-blue: #8ab4f8;
-  --palette-dark-amber: #f0b45c;
-  --palette-dark-focus: #b3d0ff;
-  --palette-dark-gray: #8c8c8c;
-
-  --font-size-0: 1rem;
-  --font-size-1: 1.25rem;
-  --font-size-2: 1.563rem;
-  --font-size-3: 1.953rem;
-
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 2rem;
-  --space-5: 4rem;
-
-  --measure: 65ch;
-
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
-  --line-height-body: 1.6;
-  --line-height-heading: 1.2;
-  --focus-ring-width: 3px;
-
-  color-scheme: light dark;
-
-  --color-text: light-dark(var(--palette-ink), var(--palette-dark-ink));
-  --color-surface: light-dark(var(--palette-paper), var(--palette-dark-paper));
-  --color-link: light-dark(var(--palette-blue), var(--palette-dark-blue));
-  --color-accent: light-dark(var(--palette-amber), var(--palette-dark-amber));
-  --color-focus: light-dark(var(--palette-focus), var(--palette-dark-focus));
-  --color-border: light-dark(var(--palette-gray), var(--palette-dark-gray));
+@theme inline reference {
+  --color-*: initial;
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-link: var(--color-link);
+  --color-accent: var(--color-accent);
+  --color-border: var(--color-border);
+  --color-focus: var(--color-focus);
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-}
+@layer tokens {
+  :root,
+  :host {
+    --palette-ink: #1a1a1a;
+    --palette-paper: #ffffff;
+    --palette-blue: #0b57d0;
+    --palette-amber: #8a4b00;
+    --palette-focus: #0a3d91;
+    --palette-gray: #767676;
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-}
+    --palette-dark-ink: #e8e8e8;
+    --palette-dark-paper: #121212;
+    --palette-dark-blue: #8ab4f8;
+    --palette-dark-amber: #f0b45c;
+    --palette-dark-focus: #b3d0ff;
+    --palette-dark-gray: #8c8c8c;
 
-@media print {
-  :root[data-theme],
-  :root:not([data-theme]) {
+    --font-size-0: 1rem;
+    --font-size-1: 1.25rem;
+    --font-size-2: 1.563rem;
+    --font-size-3: 1.953rem;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 1rem;
+    --space-4: 2rem;
+    --space-5: 4rem;
+
+    --measure: 65ch;
+
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+    --line-height-body: 1.6;
+    --line-height-heading: 1.2;
+    --focus-ring-width: 3px;
+    --border-width: 1px;
+
+    color-scheme: light dark;
+
+    --color-text: light-dark(var(--palette-ink), var(--palette-dark-ink));
+    --color-surface: light-dark(
+      var(--palette-paper),
+      var(--palette-dark-paper)
+    );
+    --color-link: light-dark(var(--palette-blue), var(--palette-dark-blue));
+    --color-accent: light-dark(var(--palette-amber), var(--palette-dark-amber));
+    --color-focus: light-dark(var(--palette-focus), var(--palette-dark-focus));
+    --color-border: light-dark(var(--palette-gray), var(--palette-dark-gray));
+  }
+
+  :root[data-theme="light"] {
     color-scheme: light;
   }
-}
 
-@media print {
-  .no-print {
-    display: none;
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  @media print {
+    :root[data-theme],
+    :root:not([data-theme]) {
+      color-scheme: light;
+    }
   }
 }
 
-body {
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  font-family: var(--font-body);
-  font-size: var(--font-size-0);
-  line-height: var(--line-height-body);
-  overflow-wrap: break-word;
-  margin: 0;
-  padding: var(--space-3);
-  display: grid;
-  grid-template-columns: minmax(0, var(--measure));
-  justify-content: center;
-  gap: var(--space-4);
+@layer base {
+  body {
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    font-family: var(--font-body);
+    font-size: var(--font-size-0);
+    line-height: var(--line-height-body);
+    overflow-wrap: break-word;
+    margin: 0;
+    padding: var(--space-3);
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure));
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  a {
+    color: var(--color-link);
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--space-1);
+  }
+
+  h1,
+  h2 {
+    line-height: var(--line-height-heading);
+  }
+
+  h1 {
+    font-size: var(--font-size-3);
+    color: var(--color-accent);
+  }
+
+  h2 {
+    font-size: var(--font-size-2);
+  }
+
+  hr {
+    border-color: var(--color-border);
+  }
 }
 
-a {
-  color: var(--color-link);
-}
+@layer components {
+  @media print {
+    .no-print {
+      display: none;
+    }
+  }
 
-a:focus-visible,
-button:focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-focus);
-  outline-offset: var(--space-1);
-}
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
 
-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
-}
+  .site-header > a {
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--color-text);
+  }
 
-header > a {
-  font-weight: bold;
-  text-decoration: none;
-  color: var(--color-text);
-}
+  .site-nav,
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
 
-nav,
-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
+  .site-footer {
+    border-top: var(--border-width) solid var(--color-border);
+    padding-top: var(--space-3);
+  }
 
-header button {
-  font: inherit;
-  color: var(--color-text);
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  cursor: pointer;
-}
+  .theme-toggle {
+    font: inherit;
+    color: var(--color-text);
+    background-color: transparent;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+  }
 
-header button[hidden] {
-  display: none;
-}
+  .theme-toggle[hidden] {
+    display: none;
+  }
 
-footer {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-3);
-}
+  .post-list {
+    list-style-position: outside;
+  }
 
-h1,
-h2 {
-  line-height: var(--line-height-heading);
-}
-
-h1 {
-  font-size: var(--font-size-3);
-  color: var(--color-accent);
-}
-
-h2 {
-  font-size: var(--font-size-2);
-}
-
-hr {
-  border-color: var(--color-border);
+  .prose {
+    max-width: var(--measure);
+  }
 }

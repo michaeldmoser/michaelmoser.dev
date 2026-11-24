@@ -18,7 +18,7 @@ export default class PostLayout {
   render(data: PostData) {
     const { date } = data.page
     return (
-      <article>
+      <article class='prose'>
         <h1>{data.title}</h1>
         {data.draft === true ? <p>Draft</p> : null}
         <p>

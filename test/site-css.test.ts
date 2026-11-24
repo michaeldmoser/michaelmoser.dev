@@ -1,3 +1,4 @@
+import postcss from 'postcss'
 import { describe, expect, it } from 'vitest'
 import { contrastRatio } from '../lib/contrast.ts'
 import {
@@ -9,9 +10,57 @@ import { compileSiteCss } from '../src/_includes/site-css.ts'
 
 const css = await compileSiteCss()
 
+const rawValuePattern =
+  /#[0-9a-f]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|oklab|lab|lch|hwb)\(|(?:^|[\s(,])-?\d*\.?\d+(?:px|rem|em|ch|vw|vh|ex|pt)\b/i
+
+function insideAtRule(node: postcss.Node, name: string) {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (parent.type === 'atrule' && (parent as postcss.AtRule).name === name) {
+      return true
+    }
+  }
+  return false
+}
+
+function insideLayer(node: postcss.Node, layer: string) {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (
+      parent.type === 'atrule' &&
+      (parent as postcss.AtRule).name === 'layer' &&
+      (parent as postcss.AtRule).params.trim() === layer
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
 describe('site css tokens', () => {
   it('has no raw color, size, or measure values outside the token blocks', () => {
     expect(findRawValues(css)).toEqual([])
+  })
+
+  it('declares custom property tokens only inside the tokens layer', () => {
+    const outside: string[] = []
+    postcss.parse(css).walkDecls((decl) => {
+      if (!decl.prop.startsWith('--') || decl.prop.startsWith('--tw-')) return
+      if (insideAtRule(decl, 'property')) return
+      if (!insideLayer(decl, 'tokens')) outside.push(decl.prop)
+    })
+    expect(outside).toEqual([])
+  })
+
+  it('writes raw color, size and measure values only inside the tokens layer', () => {
+    const outside: string[] = []
+    postcss.parse(css).walkDecls((decl) => {
+      if (decl.prop.startsWith('--')) return
+      if (insideAtRule(decl, 'property')) return
+      if (insideLayer(decl, 'tokens')) return
+      if (rawValuePattern.test(decl.value)) {
+        outside.push(`${decl.prop}: ${decl.value}`)
+      }
+    })
+    expect(outside).toEqual([])
   })
 
   it('declares the required color tokens', () => {

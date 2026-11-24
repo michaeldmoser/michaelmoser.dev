@@ -8,7 +8,7 @@ export interface ListedPost {
 
 export function PostList({ posts }: { posts: ListedPost[] }) {
   return (
-    <ul>
+    <ul class='post-list'>
       {posts.map((post) => (
         <li>
           <a href={post.url}>{post.data.title}</a>
