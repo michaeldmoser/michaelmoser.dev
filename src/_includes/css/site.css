@@ -31,6 +31,22 @@
     --palette-dark-focus: #b3d0ff;
     --palette-dark-gray: #8c8c8c;
 
+    --palette-code-paper: #f3f3f3;
+    --palette-code-keyword: #7a2e9e;
+    --palette-code-string: #0b6b2f;
+    --palette-code-comment: #5c5c5c;
+    --palette-code-number: #9a3412;
+    --palette-code-function: #0a3d91;
+    --palette-code-punctuation: #1a1a1a;
+
+    --palette-dark-code-paper: #1e1e1e;
+    --palette-dark-code-keyword: #d7a8f5;
+    --palette-dark-code-string: #8fd69c;
+    --palette-dark-code-comment: #a0a0a0;
+    --palette-dark-code-number: #f0b45c;
+    --palette-dark-code-function: #8ab4f8;
+    --palette-dark-code-punctuation: #e8e8e8;
+
     --font-size-0: 1rem;
     --font-size-1: 1.25rem;
     --font-size-2: 1.563rem;
@@ -62,6 +78,34 @@
     --color-accent: light-dark(var(--palette-amber), var(--palette-dark-amber));
     --color-focus: light-dark(var(--palette-focus), var(--palette-dark-focus));
     --color-border: light-dark(var(--palette-gray), var(--palette-dark-gray));
+    --color-code-surface: light-dark(
+      var(--palette-code-paper),
+      var(--palette-dark-code-paper)
+    );
+    --color-code-keyword: light-dark(
+      var(--palette-code-keyword),
+      var(--palette-dark-code-keyword)
+    );
+    --color-code-string: light-dark(
+      var(--palette-code-string),
+      var(--palette-dark-code-string)
+    );
+    --color-code-comment: light-dark(
+      var(--palette-code-comment),
+      var(--palette-dark-code-comment)
+    );
+    --color-code-number: light-dark(
+      var(--palette-code-number),
+      var(--palette-dark-code-number)
+    );
+    --color-code-function: light-dark(
+      var(--palette-code-function),
+      var(--palette-dark-code-function)
+    );
+    --color-code-punctuation: light-dark(
+      var(--palette-code-punctuation),
+      var(--palette-dark-code-punctuation)
+    );
   }
 
   :root[data-theme="light"] {
@@ -171,6 +215,36 @@
 
   .prose {
     max-width: var(--measure);
+  }
+
+  .prose pre {
+    background-color: var(--color-code-surface);
+    color: var(--color-code-punctuation);
+    overflow-x: auto;
+  }
+
+  .token.keyword {
+    color: var(--color-code-keyword);
+  }
+
+  .token.string {
+    color: var(--color-code-string);
+  }
+
+  .token.comment {
+    color: var(--color-code-comment);
+  }
+
+  .token.number {
+    color: var(--color-code-number);
+  }
+
+  .token.function {
+    color: var(--color-code-function);
+  }
+
+  .token.punctuation {
+    color: var(--color-code-punctuation);
   }
 
   @media print {

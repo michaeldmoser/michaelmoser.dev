@@ -156,6 +156,80 @@ const printPalettes: [string, Palette][] = [
   ['dark OS and dark theme', { os: 'dark', theme: 'dark' }]
 ]
 
+const tokenKinds = [
+  'keyword',
+  'string',
+  'comment',
+  'number',
+  'function',
+  'punctuation'
+]
+
+function resolveVar(value: string, colors: Record<string, string>) {
+  const match = /^var\(\s*(--[\w-]+)\s*(?:,[^)]*)?\)$/.exec(value.trim())
+  if (match) return colors[match[1]]
+  return value.trim()
+}
+
+function declaredValues(
+  selectorTest: (selector: string) => boolean,
+  props: string[]
+) {
+  const values: string[] = []
+  postcss.parse(css).walkRules((rule) => {
+    if (!rule.selectors.some(selectorTest)) return
+    rule.walkDecls((decl) => {
+      if (props.includes(decl.prop)) values.push(decl.value)
+    })
+  })
+  return values
+}
+
+describe('site css code highlighting contrast', () => {
+  it.each(screenPalettes)(
+    'every Prism token color meets AA contrast against the code block background for %s',
+    (_label, palette) => {
+      const colors = resolveColors(css, palette)
+      const backgrounds = declaredValues(
+        (selector) =>
+          /(^|[\s>+~])pre\b/.test(selector) && !/\.token/.test(selector),
+        ['background', 'background-color']
+      )
+      expect(backgrounds.length).toBeGreaterThan(0)
+      const background = resolveVar(backgrounds[backgrounds.length - 1], colors)
+      expect(background).toMatch(/^#[0-9a-f]{6}$/i)
+
+      for (const kind of tokenKinds) {
+        const pattern = new RegExp(`\\.token\\.${kind}(?![\\w-])`)
+        const values = declaredValues(
+          (selector) => pattern.test(selector),
+          ['color']
+        )
+        expect(values.length, `${kind} has a color rule`).toBeGreaterThan(0)
+        for (const value of values) {
+          const color = resolveVar(value, colors)
+          expect(color, `${kind} color resolves`).toMatch(/^#[0-9a-f]{6}$/i)
+          expect(
+            contrastRatio(color, background),
+            `${kind} against code background`
+          ).toBeGreaterThanOrEqual(4.5)
+        }
+      }
+    }
+  )
+})
+
+describe('site css code block overflow', () => {
+  it('scrolls post pre blocks horizontally instead of widening the page', () => {
+    const values = declaredValues(
+      (selector) => /\.prose/.test(selector) && /\bpre$/.test(selector.trim()),
+      ['overflow-x']
+    )
+    expect(values.length).toBeGreaterThan(0)
+    expect(values[values.length - 1].trim()).toBe('auto')
+  })
+})
+
 describe('site css contrast', () => {
   it.each(screenPalettes)(
     'body text and links meet AA contrast against the background for %s',
