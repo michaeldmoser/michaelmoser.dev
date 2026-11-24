@@ -66,6 +66,7 @@
     --line-height-heading: 1.2;
     --focus-ring-width: 3px;
     --border-width: 1px;
+    --diagram-dark-filter: invert(1) hue-rotate(180deg);
 
     color-scheme: light dark;
 
@@ -245,6 +246,16 @@
 
   .token.punctuation {
     color: var(--color-code-punctuation);
+  }
+
+  :root[data-theme="dark"] .diagram:not(.no-invert) {
+    filter: var(--diagram-dark-filter);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .diagram:not(.no-invert) {
+      filter: var(--diagram-dark-filter);
+    }
   }
 
   @media print {

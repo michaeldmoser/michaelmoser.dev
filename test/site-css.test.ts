@@ -230,6 +230,99 @@ describe('site css code block overflow', () => {
   })
 })
 
+type DiagramFilterRule = {
+  selector: string
+  filter: string
+  darkMedia: boolean
+}
+
+function normalizeSelector(selector: string) {
+  return selector.replace(/["']/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function resolveFilter(value: string) {
+  const match = /^var\(\s*(--[\w-]+)\s*(?:,[^)]*)?\)$/.exec(value.trim())
+  if (!match) return value.trim()
+  let resolved = ''
+  postcss.parse(css).walkDecls(match[1], (decl) => {
+    resolved = decl.value
+  })
+  return resolved
+}
+
+function inverseFilterRules() {
+  const found: DiagramFilterRule[] = []
+  postcss.parse(css).walkRules((rule) => {
+    rule.walkDecls('filter', (decl) => {
+      if (decl.parent !== rule) return
+      const filter = resolveFilter(decl.value)
+      if (!/invert\(/.test(filter)) return
+      let darkMedia = false
+      let parent: postcss.Node | undefined = rule.parent
+      for (; parent; parent = parent.parent) {
+        if (
+          parent.type === 'atrule' &&
+          (parent as postcss.AtRule).name === 'media' &&
+          /prefers-color-scheme:\s*dark/.test((parent as postcss.AtRule).params)
+        ) {
+          darkMedia = true
+        }
+      }
+      for (const selector of rule.selectors) {
+        found.push({ selector: normalizeSelector(selector), filter, darkMedia })
+      }
+    })
+  })
+  return found
+}
+
+const diagramTarget = '.diagram:not(.no-invert)'
+const chosenDark = ':root[data-theme=dark]'
+const osDark = ':root:not([data-theme=light])'
+
+describe('site css diagram dark mode filter', () => {
+  it('inverts and hue-rotates diagrams when the chosen theme is dark', () => {
+    const rules = inverseFilterRules().filter(
+      (rule) =>
+        rule.selector.includes(chosenDark) &&
+        rule.selector.endsWith(diagramTarget)
+    )
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) {
+      expect(rule.filter).toMatch(/invert\(/)
+      expect(rule.filter).toMatch(/hue-rotate\(/)
+    }
+  })
+
+  it('inverts and hue-rotates diagrams when the OS is dark and no theme is chosen', () => {
+    const rules = inverseFilterRules().filter(
+      (rule) =>
+        rule.darkMedia &&
+        rule.selector.includes(osDark) &&
+        rule.selector.endsWith(diagramTarget)
+    )
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) {
+      expect(rule.filter).toMatch(/invert\(/)
+      expect(rule.filter).toMatch(/hue-rotate\(/)
+    }
+  })
+
+  it('applies the filter only to non-opt-out diagrams in dark contexts', () => {
+    const rules = inverseFilterRules()
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) {
+      expect(rule.selector, 'targets only diagrams').toMatch(
+        /\.diagram:not\(\.no-invert\)$/
+      )
+      const dark =
+        rule.selector.includes(chosenDark) ||
+        (rule.darkMedia && rule.selector.includes(osDark))
+      expect(dark, `${rule.selector} is a dark context`).toBe(true)
+    }
+  })
+})
+
 describe('site css contrast', () => {
   it.each(screenPalettes)(
     'body text and links meet AA contrast against the background for %s',
