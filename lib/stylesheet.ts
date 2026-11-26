@@ -252,14 +252,20 @@ export function resolveColors(
   return colors
 }
 
-export function declaredTokens(css: string): string[] {
-  const names = new Set<string>()
+export function declaredTokenValues(css: string): Map<string, string> {
+  const values = new Map<string, string>()
   for (const rule of tokenBlocks(postcss.parse(css))) {
     rule.walkDecls((decl) => {
-      if (decl.prop.startsWith('--')) names.add(decl.prop)
+      if (decl.prop.startsWith('--') && !values.has(decl.prop)) {
+        values.set(decl.prop, decl.value)
+      }
     })
   }
-  return [...names]
+  return values
+}
+
+export function declaredTokens(css: string): string[] {
+  return [...declaredTokenValues(css).keys()]
 }
 
 export function findRawValues(css: string): RawValue[] {

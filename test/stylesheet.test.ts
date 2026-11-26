@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   declaredTokens,
+  declaredTokenValues,
   findRawValues,
   resolveColors
 } from '../lib/stylesheet.ts'
@@ -283,5 +284,30 @@ describe('declaredTokens', () => {
   it('omits custom properties declared in ordinary rules', () => {
     const css = ':root { --color-bg: #ffffff; } .card { --card-pad: 4px; }'
     expect(declaredTokens(css)).toEqual(['--color-bg'])
+  })
+})
+
+describe('declaredTokenValues', () => {
+  const css = [
+    ':root { color-scheme: light dark; --color-bg: #ffffff; --space-2: 8px; }',
+    ':root[data-theme="dark"] { --color-bg: #000000; --color-text: #eeeeee; }',
+    '@media print { :root { --color-bg: #fafafa; --color-border: #111111; } }'
+  ].join(' ')
+
+  it('maps each token to its first declared value in source order', () => {
+    expect(declaredTokenValues(css)).toEqual(
+      new Map([
+        ['--color-bg', '#ffffff'],
+        ['--space-2', '8px'],
+        ['--color-text', '#eeeeee'],
+        ['--color-border', '#111111']
+      ])
+    )
+  })
+
+  it('has exactly the names declaredTokens returns', () => {
+    expect([...declaredTokenValues(css).keys()].sort()).toEqual(
+      [...declaredTokens(css)].sort()
+    )
   })
 })
