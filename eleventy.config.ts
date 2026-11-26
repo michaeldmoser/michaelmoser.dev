@@ -13,6 +13,7 @@ import { load } from 'js-yaml'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
 import { encodeAddress, readableAddress } from './lib/contact.ts'
+import { devOnlyPolicy } from './lib/dev-only.ts'
 import { altProblem, diagramClasses, isLocalImage } from './lib/images.ts'
 import {
   checkPosts,
@@ -272,6 +273,17 @@ export default function (eleventyConfig: UserConfig) {
       return false
     }
   )
+  eleventyConfig.addPreprocessor(
+    'excludeDevOnlyPages',
+    '11ty.tsx',
+    (data: { page: { inputPath: string } }) => {
+      const devOnly = data.page.inputPath.includes('/style-guide/')
+      if (!devOnly || devOnlyPolicy(runContext()) === 'render') {
+        return undefined
+      }
+      return false
+    }
+  )
   eleventyConfig.addDataExtension('yaml', (contents: string) => load(contents))
   eleventyConfig.addCollection('posts', orderedPosts)
   eleventyConfig.addCollection('resume', shapedResume)
@@ -283,6 +295,10 @@ export default function (eleventyConfig: UserConfig) {
       encoded: encodeAddress(data.site.contactEmail),
       readable: readableAddress(data.site.contactEmail)
     })
+  )
+  eleventyConfig.addGlobalData(
+    'devServer',
+    () => devOnlyPolicy(runContext()) === 'render'
   )
   eleventyConfig.addGlobalData('prePaintScript', () =>
     bundleBrowserScript('pre-paint.ts')
