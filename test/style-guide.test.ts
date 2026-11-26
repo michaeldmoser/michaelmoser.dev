@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { declaredTokens } from '../lib/stylesheet.ts'
+import { contrastReport } from '../lib/contrast.ts'
+import { checkSite } from '../lib/site-check.ts'
+import {
+  declaredTokens,
+  declaredTokenValues,
+  resolveColors
+} from '../lib/stylesheet.ts'
 import { buildScenario } from './scenario.ts'
 
 describe('style guide is absent from the production build', () => {
@@ -155,6 +162,150 @@ describe('style guide theme frame specimens under serve', () => {
       /<aside class="callout callout-\w+">[\s\S]*?<\/aside>/
     )
   })
+})
+
+describe('style guide shell colour tokens and contrast table under serve', () => {
+  const css = readFileSync(
+    join(import.meta.dirname, '..', 'src', '_includes', 'css', 'site.css'),
+    'utf8'
+  )
+  const colorContexts = {
+    light: { os: 'light' },
+    dark: { os: 'dark' },
+    print: { os: 'light', print: true }
+  } as const
+  const allTokens = declaredTokens(css)
+  const primitives = allTokens.filter((name) => name.startsWith('--palette-'))
+  const semantics = allTokens.filter((name) => name.startsWith('--color-'))
+  const declaredValues = declaredTokenValues(css)
+  const tokenPattern = /--[a-z0-9-]+/gi
+
+  let shell = ''
+
+  beforeAll(async () => {
+    const { outputDir, error } = await buildScenario('valid', {
+      runMode: 'serve',
+      write: true
+    })
+    expect(error).toBeUndefined()
+    shell = readFileSync(
+      join(outputDir ?? '', 'style-guide', 'index.html'),
+      'utf8'
+    )
+  }, 60_000)
+
+  const textOf = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&#?\w+;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+  const tokensIn = (text: string): string[] => text.match(tokenPattern) ?? []
+  const tablesOf = (html: string) =>
+    html.match(/<table\b[\s\S]*?<\/table>/gi) ?? []
+  const rowsOf = (html: string) => html.match(/<tr\b[\s\S]*?<\/tr>/gi) ?? []
+  const swatchRow = (name: string) =>
+    rowsOf(shell)
+      .map(textOf)
+      .find((text) => {
+        const found = new Set(tokensIn(text))
+        return found.size === 1 && found.has(name)
+      })
+
+  it('shows every semantic colour token with its hex for light, dark and print', () => {
+    expect(semantics.length).toBeGreaterThan(0)
+    for (const name of semantics) {
+      const row = swatchRow(name)
+      expect(row, name).toBeDefined()
+      for (const [context, resolver] of Object.entries(colorContexts)) {
+        const hex = resolveColors(css, resolver)[name]
+        expect(hex, `${name} ${context}`).toBeDefined()
+        expect(row, `${name} ${context}`).toContain(hex.toLowerCase())
+      }
+    }
+  })
+
+  it('shows every palette primitive with its value once, apart from the per-context semantic tokens', () => {
+    expect(primitives.length).toBeGreaterThan(0)
+    for (const name of primitives) {
+      const value = declaredValues.get(name)
+      expect(value, name).toBeDefined()
+      expect(swatchRow(name), name).toContain((value ?? '').toLowerCase())
+    }
+
+    const primitiveTables = tablesOf(shell).filter((table) =>
+      primitives.every((name) => textOf(table).includes(name))
+    )
+    expect(primitiveTables.length).toBeGreaterThan(0)
+    for (const table of primitiveTables) {
+      const text = textOf(table)
+      expect(tokensIn(text).some((name) => name.startsWith('--color-'))).toBe(
+        false
+      )
+      const headers = (table.match(/<th\b[\s\S]*?<\/th>/gi) ?? [])
+        .map(textOf)
+        .join(' ')
+      expect(headers).not.toMatch(/\b(light|dark|print)\b/)
+    }
+  })
+
+  it('has one contrast row per report row with its pair, ratio, threshold and verdict', () => {
+    const report = contrastReport(css)
+    expect(report.length).toBeGreaterThan(0)
+    const rows = rowsOf(shell).map(textOf)
+    for (const entry of report) {
+      const label = `${entry.context} ${entry.foreground} on ${entry.background}`
+      const match = rows.find((text) => {
+        const found = tokensIn(text)
+        const fg = found.indexOf(entry.foreground)
+        const bg = found.indexOf(entry.background)
+        return (
+          found.length === 2 &&
+          fg === 0 &&
+          bg === 1 &&
+          new RegExp(`\\b${entry.context}\\b`).test(text)
+        )
+      })
+      expect(match, label).toBeDefined()
+      const numbers = (
+        (match ?? '')
+          .replace(tokenPattern, ' ')
+          .replace(/#[0-9a-f]{3,8}\b/g, ' ')
+          .match(/\d+(?:\.\d+)?/g) ?? []
+      ).map(Number)
+      expect(
+        numbers.some((n) => Math.abs(n - entry.ratio) <= 0.01),
+        `${label} ratio ${entry.ratio}`
+      ).toBe(true)
+      expect(numbers, `${label} threshold`).toContain(entry.threshold)
+      const verdict = /\b(pass|fail)\w*/.exec(match ?? '')?.[1]
+      expect(verdict, label).toBe(entry.pass ? 'pass' : 'fail')
+    }
+  })
+})
+
+describe('style guide pages pass the site check under serve', () => {
+  it('reports no validation, reference or class errors for style-guide files', async () => {
+    const { outputDir, error } = await buildScenario('valid', {
+      runMode: 'serve',
+      write: true
+    })
+    expect(error).toBeUndefined()
+
+    const { errors } = await checkSite(outputDir ?? '', {
+      env: {},
+      privateTermsPath: fileURLToPath(
+        new URL('./fixtures/no-such-private-terms.txt', import.meta.url)
+      ),
+      contactEmail: 'reachoutto@michaelmoser.dev'
+    })
+
+    const offending = errors
+      .filter((problem) => problem.file.includes('style-guide'))
+      .filter((problem) => !/dev-only/i.test(problem.message))
+      .map((problem) => `${problem.file}: ${problem.message}`)
+    expect(offending).toEqual([])
+  }, 60_000)
 })
 
 describe('style guide shell under serve', () => {

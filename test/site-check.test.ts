@@ -14,6 +14,27 @@ const options = {
   contactEmail: 'reachoutto@michaelmoser.dev'
 }
 
+describe('checkSite dev-only style guide gate', () => {
+  it('reports one dev-only error per file under style-guide', async () => {
+    const result = await checkSite(outputDir('dev-only-page'), options)
+    const devOnly = result.errors.filter((e) => /dev-only/i.test(e.message))
+
+    expect(devOnly).toHaveLength(2)
+    expect(devOnly.some((e) => e.file.endsWith('style-guide/index.html'))).toBe(
+      true
+    )
+    expect(devOnly.some((e) => e.file.endsWith('style-guide/guide.css'))).toBe(
+      true
+    )
+  })
+
+  it('reports no dev-only error for a clean built site', async () => {
+    const result = await checkSite(outputDir('clean'), options)
+
+    expect(result.errors.filter((e) => /dev-only/i.test(e.message))).toEqual([])
+  })
+})
+
 describe('checkSite', () => {
   it('reports no errors and only the denylist warning for a clean built site', async () => {
     const result = await checkSite(outputDir('clean'), options)

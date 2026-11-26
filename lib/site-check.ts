@@ -249,6 +249,15 @@ async function privacyProblems(
   return problems
 }
 
+function devOnlyProblems(paths: string[]): Problem[] {
+  return paths
+    .filter((path) => path.startsWith('style-guide/'))
+    .map((path) => ({
+      file: path,
+      message: 'dev-only style guide page must not be in built output'
+    }))
+}
+
 export async function checkSite(
   dir: string,
   options: SiteCheckOptions
@@ -257,6 +266,7 @@ export async function checkSite(
   const warnings: string[] = []
   const paths = await listFiles(dir)
   const files = new Set(paths)
+  errors.push(...devOnlyProblems(paths))
   const validator = await createValidator()
   const pages: { file: string; html: string }[] = []
   for (const page of paths.filter((path) => path.endsWith('.html'))) {

@@ -19,6 +19,7 @@ export default function base(data: {
   description?: string
   tagLabel?: string
   noindex?: boolean
+  headStyle?: string
   isPost?: boolean
   ogImage?: string
   page: { url: string; date: Date }
@@ -69,6 +70,7 @@ export default function base(data: {
             title={data.site.feedTitle}
           />
           <link rel='stylesheet' href='/assets/css/site.css' />
+          {data.headStyle ? <style>{html(data.headStyle)}</style> : null}
           <script src='/assets/js/theme.js' defer></script>
           <script src='/assets/js/contact.js' defer></script>
           {data.isPost ? (
