@@ -1,4 +1,6 @@
 declare module '@11ty/eleventy-plugin-syntaxhighlight' {
-  const syntaxHighlight: unknown
+  const syntaxHighlight: {
+    pairedShortcode(content: string, language: string): string
+  }
   export default syntaxHighlight
 }

@@ -1,21 +1,17 @@
 import { readFileSync } from 'node:fs'
+import syntaxHighlight from '@11ty/eleventy-plugin-syntaxhighlight'
 import { html } from 'jsx-async-runtime'
-import postcss from 'postcss'
-import Prism from 'prismjs'
 import { calloutLabel } from '#lib/callouts.ts'
-import { declaredTokens } from '#lib/stylesheet.ts'
+import { declaredTokenValues } from '#lib/stylesheet.ts'
 
 const css = readFileSync(new URL('../css/site.css', import.meta.url), 'utf8')
 
-const declaredValues = new Map<string, string>()
-postcss.parse(css).walkDecls(/^--/, (decl) => {
-  if (!declaredValues.has(decl.prop)) declaredValues.set(decl.prop, decl.value)
-})
+const declaredValues = declaredTokenValues(css)
 
 function tokensOf(family: 'font-size' | 'space') {
-  return declaredTokens(css)
-    .filter((name) => name.startsWith(`--${family}-`))
-    .map((name) => ({ name, value: declaredValues.get(name) ?? '' }))
+  return [...declaredValues]
+    .filter(([name]) => name.startsWith(`--${family}-`))
+    .map(([name, value]) => ({ name, value }))
 }
 
 const fontSizes = tokensOf('font-size')
@@ -37,9 +33,8 @@ function greet(name) {
   return "Hello, " + name + count
 }`
 
-const highlightedCode = Prism.highlight(
+const highlightedCode = syntaxHighlight.pairedShortcode(
   codeSample,
-  Prism.languages.javascript,
   'javascript'
 )
 
@@ -66,9 +61,7 @@ export function Specimens() {
         <button type='button'>A button</button>
       </p>
       <h2>Code</h2>
-      <pre>
-        <code>{html(highlightedCode)}</code>
-      </pre>
+      {html(highlightedCode)}
       <h2>Callout</h2>
       <aside class='callout callout-note'>
         <p class='callout-label'>{calloutLabel('note')}</p>
