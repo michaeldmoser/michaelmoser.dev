@@ -333,6 +333,95 @@ describe('style guide shell under serve', () => {
   })
 })
 
+describe('style guide sample post', () => {
+  it('renders every prose element through the post layout under serve', async () => {
+    const { outputDir, error } = await buildScenario('valid', {
+      runMode: 'serve',
+      write: true
+    })
+    expect(error).toBeUndefined()
+
+    const html = readFileSync(
+      join(outputDir ?? '', 'style-guide', 'sample-post', 'index.html'),
+      'utf8'
+    )
+    const article =
+      /<article\b[^>]*class="[^"]*\bprose\b[^"]*"[^>]*>[\s\S]*?<\/article>/.exec(
+        html
+      )?.[0] ?? ''
+    expect(article).not.toBe('')
+
+    for (const tag of [
+      'h2',
+      'h3',
+      'ul',
+      'ol',
+      'blockquote',
+      'table',
+      'pre'
+    ]) {
+      expect(article, tag).toMatch(new RegExp(`<${tag}\\b`))
+    }
+    expect(article).toMatch(/<p\b[^>]*>[^<]*<code\b|<li\b[^>]*>[^<]*<code\b/)
+    for (const type of ['note', 'tip', 'warning', 'tradeoff']) {
+      expect(article, type).toMatch(
+        new RegExp(`<aside class="callout callout-${type}">`)
+      )
+    }
+
+    const image = /<img\b[^>]*>/i.exec(article)?.[0] ?? ''
+    expect(image).not.toBe('')
+    expect(/\ssrc\s*=\s*"([^"]*)"/i.exec(image)?.[1]).toMatch(/^\/(?!\/)/)
+    expect(/\salt\s*=\s*"([^"]+)"/i.exec(image)?.[1]).toBeTruthy()
+  }, 60_000)
+
+  it('leaves the sample post out of a production build', async () => {
+    const { results, error } = await buildScenario('valid')
+    expect(error).toBeUndefined()
+
+    const pages = results ?? []
+    expect(pages.length).toBeGreaterThan(0)
+    for (const result of pages) {
+      expect(result.url, result.url).not.toContain('sample-post')
+      expect(result.outputPath ?? '', result.url).not.toContain('sample-post')
+    }
+  }, 60_000)
+
+  it('keeps the sample post out of the feed, sitemap and every other page under serve', async () => {
+    const { outputDir, error } = await buildScenario('valid', {
+      runMode: 'serve',
+      write: true
+    })
+    expect(error).toBeUndefined()
+    const dir = outputDir ?? ''
+
+    expect(
+      existsSync(join(dir, 'style-guide', 'sample-post', 'index.html'))
+    ).toBe(true)
+
+    const feed = readFileSync(join(dir, 'feed.xml'), 'utf8')
+    expect(feed.length).toBeGreaterThan(0)
+    expect(feed).not.toContain('sample-post')
+
+    const sitemap = readFileSync(join(dir, 'sitemap.xml'), 'utf8')
+    expect(sitemap).toContain('<loc>')
+    expect(sitemap).not.toContain('sample-post')
+
+    const pages = (readdirSync(dir, { recursive: true }) as string[])
+      .map(String)
+      .filter(
+        (file) =>
+          file.endsWith('.html') && !file.startsWith(join('style-guide', ''))
+      )
+    expect(pages.length).toBeGreaterThan(0)
+    for (const file of pages) {
+      expect(readFileSync(join(dir, file), 'utf8'), file).not.toContain(
+        'sample-post'
+      )
+    }
+  }, 60_000)
+})
+
 describe('production build favicon and fonts', () => {
   it('links the favicon and apple touch icon and preloads both JetBrains Mono weights on every page of a clean production build', async () => {
     const built = await buildScenario('valid', { write: true })

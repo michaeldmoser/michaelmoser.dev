@@ -275,7 +275,7 @@ export default function (eleventyConfig: UserConfig) {
   )
   eleventyConfig.addPreprocessor(
     'excludeDevOnlyPages',
-    '11ty.tsx',
+    '11ty.tsx,md',
     (data: { page: { inputPath: string } }) => {
       const devOnly = data.page.inputPath.includes('/style-guide/')
       if (!devOnly || devOnlyPolicy(runContext()) === 'render') {
