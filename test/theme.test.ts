@@ -62,7 +62,6 @@ function fakeButton() {
     attr(name: string): string | undefined
   } = {
     hidden: true,
-    textContent: null,
     setAttribute: (name, value) => {
       attributes.set(name, value)
     },
@@ -82,20 +81,20 @@ describe('theme toggle', () => {
     expect(nextChoice('system')).toBe('light')
   })
 
-  it('unhides the button labelled System when nothing is stored', () => {
+  it('unhides the button showing the system choice when nothing is stored', () => {
     const button = fakeButton()
 
     initThemeToggle(button, fakeRoot(), () => fakeStorage())
 
     expect(button.hidden).toBe(false)
-    expect(button.textContent).toBe('System')
+    expect(button.attr('data-choice')).toBe('system')
     expect(button.attr('aria-label')).toBe('Theme: system. Change theme')
   })
 
   it.each([
-    ['light', 'Light', 'Theme: light. Change theme'],
-    ['dark', 'Dark', 'Theme: dark. Change theme']
-  ])('labels the button for a stored %s theme', (stored, label, name) => {
+    ['light', 'light', 'Theme: light. Change theme'],
+    ['dark', 'dark', 'Theme: dark. Change theme']
+  ])('shows the stored %s choice on the button', (stored, label, name) => {
     const button = fakeButton()
 
     initThemeToggle(button, fakeRoot(), () =>
@@ -103,11 +102,11 @@ describe('theme toggle', () => {
     )
 
     expect(button.hidden).toBe(false)
-    expect(button.textContent).toBe(label)
+    expect(button.attr('data-choice')).toBe(label)
     expect(button.attr('aria-label')).toBe(name)
   })
 
-  it('cycles theme, label, accessible name and storage on each click', () => {
+  it('cycles theme, shown choice, accessible name and storage on each click', () => {
     const button = fakeButton()
     const root = fakeRoot()
     const storage = fakeStorage()
@@ -118,17 +117,17 @@ describe('theme toggle', () => {
       button.click()
       observed.push([
         root.getAttribute('data-theme'),
-        button.textContent,
+        button.attr('data-choice'),
         button.attr('aria-label'),
         storage.getItem(THEME_STORAGE_KEY)
       ])
     }
 
     expect(observed).toEqual([
-      ['light', 'Light', 'Theme: light. Change theme', 'light'],
-      ['dark', 'Dark', 'Theme: dark. Change theme', 'dark'],
-      [null, 'System', 'Theme: system. Change theme', null],
-      ['light', 'Light', 'Theme: light. Change theme', 'light']
+      ['light', 'light', 'Theme: light. Change theme', 'light'],
+      ['dark', 'dark', 'Theme: dark. Change theme', 'dark'],
+      [null, 'system', 'Theme: system. Change theme', null],
+      ['light', 'light', 'Theme: light. Change theme', 'light']
     ])
   })
 
@@ -142,7 +141,7 @@ describe('theme toggle', () => {
 
     expect(root.getAttribute('data-theme')).toBeNull()
     expect(storage.getItem(THEME_STORAGE_KEY)).toBeNull()
-    expect(button.textContent).toBe('System')
+    expect(button.attr('data-choice')).toBe('system')
   })
 
   it('still changes the theme when storage access throws', () => {
@@ -155,7 +154,7 @@ describe('theme toggle', () => {
     expect(root.getAttribute('data-theme')).toBe('light')
     expect(() => button.click()).not.toThrow()
     expect(root.getAttribute('data-theme')).toBe('dark')
-    expect(button.textContent).toBe('Dark')
+    expect(button.attr('data-choice')).toBe('dark')
   })
 
   it('still changes the theme when storage methods throw', () => {

@@ -355,6 +355,20 @@
 
   .theme-toggle {
     margin-inline-start: var(--push-inline-end);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .theme-icon {
+    display: none;
+    inline-size: var(--icon-size);
+    block-size: var(--icon-size);
+  }
+
+  .theme-toggle[data-choice="light"] > .theme-icon-light,
+  .theme-toggle[data-choice="dark"] > .theme-icon-dark,
+  .theme-toggle[data-choice="system"] > .theme-icon-system {
+    display: block;
   }
 
   .theme-toggle::before,

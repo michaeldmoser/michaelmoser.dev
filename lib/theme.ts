@@ -17,7 +17,6 @@ export interface ThemeStorage {
 
 export interface ThemeButton {
   hidden: boolean
-  textContent: string | null
   setAttribute(name: string, value: string): void
   addEventListener(type: 'click', listener: () => void): void
 }
@@ -39,12 +38,6 @@ const NEXT_CHOICE: Record<ThemeChoice, ThemeChoice> = {
   light: 'dark',
   dark: 'system',
   system: 'light'
-}
-
-const CHOICE_LABEL: Record<ThemeChoice, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'System'
 }
 
 export function nextChoice(current: ThemeChoice): ThemeChoice {
@@ -72,7 +65,7 @@ function showChoice(
   } else {
     root.setAttribute('data-theme', choice)
   }
-  button.textContent = CHOICE_LABEL[choice]
+  button.setAttribute('data-choice', choice)
   button.setAttribute('aria-label', `Theme: ${choice}. Change theme`)
 }
 
