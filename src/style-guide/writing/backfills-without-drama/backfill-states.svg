@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" width="640" height="160" font-family="trebuchet ms, verdana, arial, sans-serif" font-size="14">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333333"/></marker></defs>
+<rect x="20" y="55" width="110" height="50" rx="25" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="75.0" y="85.0" text-anchor="middle" fill="#333333">Queued</text>
+<line x1="130" y1="80" x2="180" y2="80" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="180" y="55" width="110" height="50" rx="25" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="235.0" y="85.0" text-anchor="middle" fill="#333333">Running</text>
+<line x1="290" y1="80" x2="340" y2="80" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="340" y="55" width="110" height="50" rx="25" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="395.0" y="85.0" text-anchor="middle" fill="#333333">Paused</text>
+<path d="M395 105 Q 315 150 235 105" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/><text x="315" y="150" text-anchor="middle" fill="#333333" font-size="12">resume</text>
+<line x1="450" y1="80" x2="500" y2="80" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="500" y="55" width="120" height="50" rx="25" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="560.0" y="85.0" text-anchor="middle" fill="#333333">Done</text>
+</svg>

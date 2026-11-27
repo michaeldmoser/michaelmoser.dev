@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200" font-family="trebuchet ms, verdana, arial, sans-serif" font-size="14">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333333"/></marker></defs>
+<rect x="20" y="75" width="130" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="85.0" y="105.0" text-anchor="middle" fill="#333333">Webhook</text>
+<line x1="150" y1="100" x2="240" y2="100" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<polygon points="320,50 400,100 320,150 240,100" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="320" y="105" text-anchor="middle" fill="#333333">Key seen?</text>
+<line x1="400" y1="100" x2="480" y2="50" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="440.0" y="69.0" text-anchor="middle" fill="#333333" font-size="12">no</text>
+<line x1="400" y1="100" x2="480" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="440.0" y="119.0" text-anchor="middle" fill="#333333" font-size="12">yes</text>
+<rect x="480" y="25" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="550.0" y="55.0" text-anchor="middle" fill="#333333">Process + store</text>
+<rect x="480" y="125" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="550.0" y="155.0" text-anchor="middle" fill="#333333">Return stored</text>
+</svg>

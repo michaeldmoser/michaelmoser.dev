@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" width="640" height="220" font-family="trebuchet ms, verdana, arial, sans-serif" font-size="14">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333333"/></marker></defs>
+<rect x="20" y="80" width="120" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="80.0" y="110.0" text-anchor="middle" fill="#333333">Sync worker</text>
+<line x1="140" y1="105" x2="240" y2="60" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="190.0" y="76.5" text-anchor="middle" fill="#333333" font-size="12">write</text>
+<line x1="140" y1="105" x2="240" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="190.0" y="121.5" text-anchor="middle" fill="#333333" font-size="12">dual write</text>
+<rect x="240" y="35" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="310.0" y="65.0" text-anchor="middle" fill="#333333">Old queue</text>
+<rect x="240" y="125" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="310.0" y="155.0" text-anchor="middle" fill="#333333">New queue</text>
+<line x1="380" y1="60" x2="480" y2="60" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="380" y1="150" x2="480" y2="150" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="480" y="35" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="550.0" y="65.0" text-anchor="middle" fill="#333333">Old consumer</text>
+<rect x="480" y="125" width="140" height="50" rx="4" fill="#ECECFF" stroke="#9370DB" stroke-width="1"/><text x="550.0" y="155.0" text-anchor="middle" fill="#333333">New consumer</text>
+</svg>
