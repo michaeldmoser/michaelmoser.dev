@@ -254,7 +254,7 @@ export default function (eleventyConfig: UserConfig) {
       imgAttributes: {
         loading: 'lazy',
         decoding: 'async',
-        sizes: '(min-width: 65ch) 65ch, 100vw'
+        sizes: '(min-width: 88ch) 88ch, 100vw'
       }
     }
   })
