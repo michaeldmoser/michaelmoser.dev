@@ -1,0 +1,9 @@
+@layer tokens, base, components, utilities;
+
+@layer base {
+  @font-face {
+    font-family: 'Test Mono';
+    font-weight: 400;
+    src: url('https://fonts.example.com/test-mono-regular') format('woff2');
+  }
+}

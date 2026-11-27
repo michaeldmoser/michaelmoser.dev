@@ -312,6 +312,11 @@ export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addGlobalData('copyCodeScript', () =>
     bundleBrowserScript('copy-code.ts')
   )
+  eleventyConfig.addPassthroughCopy({
+    'src/assets/favicon.svg': 'favicon.svg',
+    'src/assets/apple-touch-icon.png': 'apple-touch-icon.png',
+    'src/assets/fonts': 'assets/fonts'
+  })
   eleventyConfig.addWatchTarget('src/_includes/css/site.css')
   eleventyConfig.addTemplateFormats('11ty.tsx')
   eleventyConfig.addExtension('11ty.tsx', tsxExtension)

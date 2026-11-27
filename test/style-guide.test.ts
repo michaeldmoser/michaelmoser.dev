@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -331,4 +331,75 @@ describe('style guide shell under serve', () => {
       expect(frame, theme).toContain('<html')
     }
   })
+})
+
+describe('production build favicon and fonts', () => {
+  it('links the favicon and apple touch icon and preloads both JetBrains Mono weights on every page of a clean production build', async () => {
+    const built = await buildScenario('valid', { write: true })
+    expect(built.error).toBeUndefined()
+    const builtDir = built.outputDir ?? ''
+
+    const htmlFiles = (readdirSync(builtDir, { recursive: true }) as string[])
+      .map(String)
+      .filter((file) => file.endsWith('.html'))
+    expect(htmlFiles.length).toBeGreaterThan(0)
+
+    const attr = (tag: string, name: string) =>
+      tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1]
+
+    for (const file of htmlFiles) {
+      const html = readFileSync(join(builtDir, file), 'utf8')
+      const head = html.match(/<head[\s>][\s\S]*?<\/head>/)?.[0] ?? ''
+      const tags = [...head.matchAll(/<link\b[^>]*>/g)].map((match) => match[0])
+
+      expect(html, file).not.toContain('data:image/svg+xml')
+      expect(
+        tags.some(
+          (tag) =>
+            attr(tag, 'rel') === 'icon' && attr(tag, 'href') === '/favicon.svg'
+        ),
+        file
+      ).toBe(true)
+      expect(
+        tags.some(
+          (tag) =>
+            attr(tag, 'rel') === 'apple-touch-icon' &&
+            attr(tag, 'href') === '/apple-touch-icon.png'
+        ),
+        file
+      ).toBe(true)
+      for (const font of ['Regular', 'Bold']) {
+        expect(
+          tags.some(
+            (tag) =>
+              attr(tag, 'rel') === 'preload' &&
+              attr(tag, 'href') ===
+                `/assets/fonts/JetBrainsMono-${font}.woff2` &&
+              attr(tag, 'as') === 'font' &&
+              attr(tag, 'type') === 'font/woff2' &&
+              /\scrossorigin(?=[\s>/=])/.test(tag)
+          ),
+          `${file} ${font}`
+        ).toBe(true)
+      }
+    }
+
+    for (const asset of [
+      'favicon.svg',
+      'apple-touch-icon.png',
+      'assets/fonts/JetBrainsMono-Regular.woff2',
+      'assets/fonts/JetBrainsMono-Bold.woff2'
+    ]) {
+      expect(existsSync(join(builtDir, asset)), asset).toBe(true)
+    }
+
+    const result = await checkSite(builtDir, {
+      env: {},
+      privateTermsPath: fileURLToPath(
+        new URL('./fixtures/no-such-private-terms.txt', import.meta.url)
+      ),
+      contactEmail: 'reachoutto@michaelmoser.dev'
+    })
+    expect(result.errors).toEqual([])
+  }, 60_000)
 })

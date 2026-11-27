@@ -35,6 +35,83 @@ describe('checkSite dev-only style guide gate', () => {
   })
 })
 
+describe('checkSite font preload', () => {
+  it('reports one preload error per declared woff2 a page does not preload with crossorigin', async () => {
+    const result = await checkSite(outputDir('font-preload'), options)
+    const preload = result.errors.filter((e) => /preload/i.test(e.message))
+    const forPage = (file: string) => preload.filter((e) => e.file === file)
+
+    expect(preload).toHaveLength(4)
+    expect(forPage('both/index.html')).toEqual([])
+    expect(forPage('one/index.html')).toEqual([
+      { file: 'one/index.html', message: expect.stringContaining('Test-Bold') }
+    ])
+    expect(forPage('none/index.html')).toHaveLength(2)
+    expect(forPage('none/index.html')).toEqual(
+      expect.arrayContaining([
+        {
+          file: 'none/index.html',
+          message: expect.stringContaining('Test-Regular')
+        },
+        {
+          file: 'none/index.html',
+          message: expect.stringContaining('Test-Bold')
+        }
+      ])
+    )
+    expect(forPage('no-crossorigin/index.html')).toEqual([
+      {
+        file: 'no-crossorigin/index.html',
+        message: expect.stringContaining('Test-Regular')
+      }
+    ])
+  })
+})
+
+describe('checkSite font limits', () => {
+  it.each([
+    ['font-limits-families', /famil/i],
+    ['font-limits-weights', /weight/i],
+    ['font-limits-origin', /fonts\.example\.com/i]
+  ])(
+    'reports one font error naming the problem for %s',
+    async (fixture, problem) => {
+      const result = await checkSite(outputDir(fixture), options)
+      const fontErrors = result.errors.filter((e) => /font/i.test(e.message))
+
+      expect(fontErrors).toHaveLength(1)
+      expect(fontErrors[0].message).toMatch(problem)
+    }
+  )
+
+  it('reports no errors for one self-hosted family with two weights', async () => {
+    const result = await checkSite(outputDir('font-limits-ok'), options)
+
+    expect(result.errors).toEqual([])
+  })
+})
+
+describe('checkSite favicon', () => {
+  it('reports one favicon error for each page without the favicon link or with a data-uri icon and none for a page with the link', async () => {
+    const result = await checkSite(outputDir('favicon'), options)
+    const favicon = result.errors.filter((e) => /favicon/i.test(e.message))
+
+    expect(favicon).toHaveLength(2)
+    expect(favicon.map((e) => e.file).sort()).toEqual([
+      'data-uri/index.html',
+      'missing/index.html'
+    ])
+  })
+
+  it('reports a data-uri icon but not a missing icon link when the output has no favicon.svg', async () => {
+    const result = await checkSite(outputDir('favicon-absent'), options)
+    const favicon = result.errors.filter((e) => /favicon/i.test(e.message))
+
+    expect(favicon).toHaveLength(1)
+    expect(favicon[0].file).toBe('data-uri/index.html')
+  })
+})
+
 describe('checkSite', () => {
   it('reports no errors and only the denylist warning for a clean built site', async () => {
     const result = await checkSite(outputDir('clean'), options)

@@ -1,4 +1,5 @@
 import { html } from 'jsx-async-runtime'
+import { HeadIcons } from '../components/head-icons.tsx'
 import { specimenCss } from '../components/style-guide-specimens.tsx'
 
 export default function styleGuideFrame(data: {
@@ -15,6 +16,7 @@ export default function styleGuideFrame(data: {
           <meta name='viewport' content='width=device-width, initial-scale=1' />
           <meta name='robots' content='noindex' />
           <title>{data.title}</title>
+          <HeadIcons />
           <link rel='stylesheet' href='/assets/css/site.css' />
           <style>{html(specimenCss)}</style>
         </head>

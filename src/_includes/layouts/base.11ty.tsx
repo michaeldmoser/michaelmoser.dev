@@ -1,6 +1,7 @@
 import { html } from 'jsx-async-runtime'
 import { pageMeta, type SeoSite } from '#lib/seo.ts'
 import { Footer } from '../components/footer.tsx'
+import { HeadIcons } from '../components/head-icons.tsx'
 import { Header } from '../components/header.tsx'
 
 const navItems = [
@@ -8,10 +9,6 @@ const navItems = [
   { label: 'Experience', href: '/experience/' },
   { label: 'About', href: '/about/' }
 ]
-
-const favicon = `data:image/svg+xml,${encodeURIComponent(
-  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='#0b57d0'/></svg>"
-)}`
 
 export default function base(data: {
   content: string
@@ -62,7 +59,7 @@ export default function base(data: {
           {meta.jsonLd.map((block) => (
             <script type='application/ld+json'>{html(block)}</script>
           ))}
-          <link rel='icon' type='image/svg+xml' href={favicon} />
+          <HeadIcons />
           <link
             rel='alternate'
             type='application/atom+xml'

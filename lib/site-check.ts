@@ -258,6 +258,131 @@ function devOnlyProblems(paths: string[]): Problem[] {
     }))
 }
 
+function fontFaceBlocks(css: string): string[] {
+  return [...css.matchAll(/@font-face\s*\{[^}]*\}/gi)].map(
+    (match) => match[0]
+  )
+}
+
+function fontFaceUrls(block: string): string[] {
+  return [
+    ...block.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]*))\s*\)/gi)
+  ].map((match) => match[1] ?? match[2] ?? match[3])
+}
+
+function declaredWoff2Paths(css: string): string[] {
+  return fontFaceBlocks(css).flatMap((block) =>
+    fontFaceUrls(block)
+      .filter((url) => /\.woff2(?:[?#].*)?$/i.test(url))
+      .map((url) => internalPath(url, SITE_CSS_PATH))
+      .filter((path): path is string => path !== null)
+  )
+}
+
+function fontFaceDescriptor(block: string, name: string): string | null {
+  const match = block.match(new RegExp(`${name}\\s*:\\s*([^;}]+)`, 'i'))
+  return match ? match[1].trim().replace(/^["']|["']$/g, '').toLowerCase() : null
+}
+
+function foreignFontHosts(css: string): string[] {
+  const hosts = fontFaceBlocks(css)
+    .flatMap(fontFaceUrls)
+    .flatMap((url) => {
+      try {
+        const parsed = new URL(url, `${SITE_ORIGIN}/${SITE_CSS_PATH}`)
+        const external =
+          /^https?:$/.test(parsed.protocol) && parsed.origin !== SITE_ORIGIN
+        return external ? [parsed.host] : []
+      } catch {
+        return []
+      }
+    })
+  return [...new Set(hosts)]
+}
+
+function fontLimitProblems(css: string): Problem[] {
+  const blocks = fontFaceBlocks(css)
+  const distinct = (name: string) => [
+    ...new Set(
+      blocks
+        .map((block) => fontFaceDescriptor(block, name))
+        .filter((value): value is string => value !== null)
+    )
+  ]
+  const families = distinct('font-family')
+  const weights = distinct('font-weight')
+  const messages = [
+    ...(families.length > 1
+      ? [`font families limited to one, found ${families.join(', ')}`]
+      : []),
+    ...(weights.length > 2
+      ? [`font weights limited to two, found ${weights.join(', ')}`]
+      : []),
+    ...foreignFontHosts(css).map(
+      (host) => `font files must be self-hosted, found ${host}`
+    )
+  ]
+  return messages.map((message) => ({ file: SITE_CSS_PATH, message }))
+}
+
+function preloadedFontPaths(page: string, html: string): Set<string> {
+  const paths = [...html.matchAll(/<link\s[^>]*>/gi)]
+    .map((match) => match[0])
+    .filter(
+      (tag) =>
+        attributeValue(tag, 'rel')?.toLowerCase() === 'preload' &&
+        attributeValue(tag, 'as')?.toLowerCase() === 'font' &&
+        attributeValue(tag, 'type')?.toLowerCase() === 'font/woff2' &&
+        /\scrossorigin(?=[\s=>/])/i.test(tag)
+    )
+    .map((tag) => attributeValue(tag, 'href'))
+    .filter((href): href is string => href !== null)
+    .map((href) => internalPath(href, page))
+    .filter((path): path is string => path !== null)
+  return new Set(paths)
+}
+
+function fontPreloadProblems(
+  pages: { file: string; html: string }[],
+  css: string
+): Problem[] {
+  const fonts = declaredWoff2Paths(css)
+  return pages.flatMap(({ file, html }) => {
+    const preloaded = preloadedFontPaths(file, html)
+    return fonts
+      .filter((font) => !preloaded.has(font))
+      .map((font) => ({
+        file,
+        message: `missing font preload with crossorigin for ${font}`
+      }))
+  })
+}
+
+function iconLinkHrefs(html: string): string[] {
+  return [...html.matchAll(/<link\s[^>]*>/gi)]
+    .map((match) => match[0])
+    .filter((tag) =>
+      (attributeValue(tag, 'rel') ?? '').toLowerCase().split(/\s+/).includes('icon')
+    )
+    .map((tag) => attributeValue(tag, 'href') ?? '')
+}
+
+function faviconProblems(
+  pages: { file: string; html: string }[],
+  hasFaviconFile: boolean
+): Problem[] {
+  return pages.flatMap(({ file, html }) => {
+    const hrefs = iconLinkHrefs(html)
+    if (hrefs.some((href) => /^data:image\/svg\+xml/i.test(href))) {
+      return [{ file, message: 'favicon must not be a data-uri icon' }]
+    }
+    if (hasFaviconFile && !hrefs.includes('/favicon.svg')) {
+      return [{ file, message: 'missing favicon link to /favicon.svg' }]
+    }
+    return []
+  })
+}
+
 export async function checkSite(
   dir: string,
   options: SiteCheckOptions
@@ -275,9 +400,12 @@ export async function checkSite(
     errors.push(...missingReferenceProblems(page, html, files))
     errors.push(...(await invalidHtmlProblems(validator, page, html)))
   }
+  errors.push(...faviconProblems(pages, files.has('favicon.svg')))
   if (files.has(SITE_CSS_PATH)) {
     const css = await readFile(join(dir, SITE_CSS_PATH), 'utf8')
     errors.push(...classProblems(pages, css))
+    errors.push(...fontPreloadProblems(pages, css))
+    errors.push(...fontLimitProblems(css))
   }
   const terms = await loadTerms(options)
   errors.push(

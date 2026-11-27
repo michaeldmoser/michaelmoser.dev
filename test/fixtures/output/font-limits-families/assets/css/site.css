@@ -1,0 +1,15 @@
+@layer tokens, base, components, utilities;
+
+@layer base {
+  @font-face {
+    font-family: 'Alpha Mono';
+    font-weight: 400;
+    src: url('/assets/fonts/Alpha.woff2') format('woff2');
+  }
+
+  @font-face {
+    font-family: 'Beta Mono';
+    font-weight: 700;
+    src: url('/assets/fonts/Beta.woff2') format('woff2');
+  }
+}

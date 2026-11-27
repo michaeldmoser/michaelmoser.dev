@@ -140,6 +140,20 @@
 }
 
 @layer base {
+  @font-face {
+    font-family: 'JetBrains Mono';
+    font-weight: 400;
+    font-display: optional;
+    src: url('/assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  }
+
+  @font-face {
+    font-family: 'JetBrains Mono';
+    font-weight: 700;
+    font-display: optional;
+    src: url('/assets/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+  }
+
   body {
     color: var(--color-text);
     background-color: var(--color-surface);
