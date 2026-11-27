@@ -12,7 +12,7 @@ export function cardPalette(css: string): CardPalette {
   return {
     background: colors['--color-surface'],
     text: colors['--color-text'],
-    accent: colors['--palette-dark-amber']
+    accent: colors['--color-accent']
   }
 }
 

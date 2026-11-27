@@ -1,22 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { cardPalette, toSatoriNode } from '../lib/card.ts'
+import { resolveColors } from '../lib/stylesheet.ts'
 import { compileSiteCss } from '../src/_includes/site-css.ts'
 
 const css = await compileSiteCss()
 
 describe('cardPalette', () => {
-  it('uses the dark paper as background, dark ink as text and dark amber as accent from site.css', () => {
+  const dark = { os: 'dark', theme: 'dark' } as const
+
+  it('uses the dark surface as background, dark text as text and the dark semantic accent as accent from site.css', () => {
+    const colors = resolveColors(css, dark)
+
     expect(cardPalette(css)).toEqual({
-      background: '#121212',
-      text: '#e8e8e8',
-      accent: '#f0b45c'
+      background: colors['--color-surface'],
+      text: colors['--color-text'],
+      accent: colors['--color-accent']
     })
   })
 
-  it('follows site.css when the dark amber changes', () => {
+  it('follows the semantic accent token when its dark value changes', () => {
     const changed = css.replace(
-      /(--palette-dark-amber:\s*)#f0b45c/,
-      '$1#123456'
+      /(--color-accent:\s*light-dark\(\s*[^,]+,\s*)(?:var\([^)]*\)|[^)]+)(\s*\))/,
+      '$1#123456$2'
     )
 
     expect(changed).not.toBe(css)
