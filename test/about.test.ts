@@ -30,7 +30,7 @@ function hrefs(fragment: string) {
 }
 
 describe('about page', () => {
-  it('shows the Uplisting story in the shared shell with the contact placeholder after it', () => {
+  it('shows the Uplisting story in the shared shell with no contact email', () => {
     const page = results.find((result) => result.url === '/about/')
 
     expect(page).toBeDefined()
@@ -48,10 +48,7 @@ describe('about page', () => {
 
     const main = html.match(/<main[\s>]([\s\S]*)<\/main>/)?.[1] ?? ''
     expect(main).not.toBe('')
-    const placeholder = main.search(/<[a-z]+\b[^>]*\sdata-contact="[^"]+"/)
-    expect(placeholder).toBeGreaterThan(-1)
-
-    const story = main.slice(0, placeholder).replace(/<[^>]*>/g, ' ')
-    expect(story).toContain('Uplisting')
+    expect(main).not.toMatch(/\sdata-contact\b/)
+    expect(main.replace(/<[^>]*>/g, ' ')).toContain('Uplisting')
   })
 })

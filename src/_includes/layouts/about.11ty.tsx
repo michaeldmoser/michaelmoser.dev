@@ -1,9 +1,7 @@
 import { html } from 'jsx-async-runtime'
-import { ContactLink } from '../components/contact-link.tsx'
 
 interface AboutData {
   content: string
-  contact: { encoded: string; readable: string }
 }
 
 export default class AboutLayout {
@@ -12,13 +10,6 @@ export default class AboutLayout {
   }
 
   render(data: AboutData) {
-    return (
-      <article>
-        {html(data.content)}
-        <p>
-          <ContactLink contact={data.contact} />
-        </p>
-      </article>
-    )
+    return <article>{html(data.content)}</article>
   }
 }

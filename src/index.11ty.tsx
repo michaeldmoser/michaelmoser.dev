@@ -1,5 +1,5 @@
-import { ContactLink } from './_includes/components/contact-link.tsx'
 import type { ListedPost } from './_includes/components/post-list.tsx'
+import { SocialLinks } from './_includes/components/social-links.tsx'
 
 export default class Home {
   data() {
@@ -10,10 +10,7 @@ export default class Home {
     }
   }
 
-  render(data: {
-    contact: { encoded: string; readable: string }
-    collections: { featuredPosts: ListedPost[] }
-  }) {
+  render(data: { collections: { featuredPosts: ListedPost[] } }) {
     const { featuredPosts } = data.collections
     return (
       <>
@@ -26,10 +23,8 @@ export default class Home {
           support it and keep changing it.
         </p>
         <p>This is where I write about building and running software.</p>
-        <p>
-          <a href='https://www.linkedin.com/in/michaeldmoser/'>LinkedIn</a>{' '}
-          <a href='https://github.com/michaeldmoser'>GitHub</a>{' '}
-          <ContactLink contact={data.contact} />
+        <p class='social-links'>
+          <SocialLinks />
         </p>
         {featuredPosts.length > 0 ? (
           <section id='featured'>

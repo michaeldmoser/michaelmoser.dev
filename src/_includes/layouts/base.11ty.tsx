@@ -21,7 +21,6 @@ export default function base(data: {
   ogImage?: string
   page: { url: string; date: Date }
   prePaintScript: string
-  contact: { encoded: string; readable: string }
   site: SeoSite & { feedTitle: string }
 }) {
   const meta = pageMeta({
@@ -69,7 +68,6 @@ export default function base(data: {
           <link rel='stylesheet' href='/assets/css/site.css' />
           {data.headStyle ? <style>{html(data.headStyle)}</style> : null}
           <script src='/assets/js/theme.js' defer></script>
-          <script src='/assets/js/contact.js' defer></script>
           {data.isPost ? (
             <script src='/assets/js/copy-code.js' defer></script>
           ) : null}
@@ -77,7 +75,7 @@ export default function base(data: {
         <body>
           <Header items={navItems} currentUrl={data.page.url} />
           <main>{html(data.content)}</main>
-          <Footer contact={data.contact} />
+          <Footer />
         </body>
       </html>
     </>

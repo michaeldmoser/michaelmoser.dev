@@ -12,7 +12,6 @@ import { build } from 'esbuild'
 import { load } from 'js-yaml'
 import markdownItContainer from 'markdown-it-container'
 import { calloutLabel, parseCalloutType } from './lib/callouts.ts'
-import { encodeAddress, readableAddress } from './lib/contact.ts'
 import { devOnlyPolicy } from './lib/dev-only.ts'
 import { altProblem, diagramClasses, isLocalImage } from './lib/images.ts'
 import {
@@ -290,13 +289,6 @@ export default function (eleventyConfig: UserConfig) {
   eleventyConfig.addCollection('featuredPosts', featuredPosts)
   eleventyConfig.addCollection('tagPages', tagPages)
   eleventyConfig.addGlobalData(
-    'eleventyComputed.contact',
-    () => (data: { site: { contactEmail: string } }) => ({
-      encoded: encodeAddress(data.site.contactEmail),
-      readable: readableAddress(data.site.contactEmail)
-    })
-  )
-  eleventyConfig.addGlobalData(
     'devServer',
     () => devOnlyPolicy(runContext()) === 'render'
   )
@@ -305,9 +297,6 @@ export default function (eleventyConfig: UserConfig) {
   )
   eleventyConfig.addGlobalData('themeScript', () =>
     bundleBrowserScript('theme-toggle.ts')
-  )
-  eleventyConfig.addGlobalData('contactScript', () =>
-    bundleBrowserScript('contact.ts')
   )
   eleventyConfig.addGlobalData('copyCodeScript', () =>
     bundleBrowserScript('copy-code.ts')

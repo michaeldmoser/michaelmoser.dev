@@ -77,6 +77,7 @@
     --inset-title-indent: calc(var(--space-2) * -1);
     --push-inline-end: auto;
     --underline-offset: 0.2em;
+    --icon-size: 1.5rem;
     --diagram-dark-filter: invert(1) hue-rotate(180deg);
 
     color-scheme: light dark;
@@ -322,6 +323,25 @@
     border-block-start: var(--border-width) solid var(--color-border);
     padding-block-start: var(--line-1);
     color: var(--color-muted);
+  }
+
+  .social-links {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .social-link {
+    display: inline-flex;
+    color: var(--color-text);
+  }
+
+  .social-link:hover {
+    color: var(--color-accent);
+  }
+
+  .social-icon {
+    inline-size: var(--icon-size);
+    block-size: var(--icon-size);
   }
 
   .theme-toggle,

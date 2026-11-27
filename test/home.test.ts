@@ -42,7 +42,7 @@ describe('home page with no posts', () => {
     expect(hrefs).toContain('https://www.linkedin.com/in/michaeldmoser/')
     expect(hrefs).toContain('https://github.com/michaeldmoser')
 
-    expect(main).toMatch(/<[a-z]+\b[^>]*\sdata-contact="[^"]+"/)
+    expect(main).not.toMatch(/\sdata-contact\b/)
 
     expect(main).not.toMatch(/<section\b[^>]*\bid="featured"/)
   })
