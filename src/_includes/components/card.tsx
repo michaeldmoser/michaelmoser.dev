@@ -8,13 +8,13 @@ export function Card(props: {
 }) {
   return (
     <div
-      style={`display: flex; flex-direction: column; width: 100%; height: 100%; background-color: ${props.palette.background}; color: ${props.palette.text}; font-family: Inter`}
+      style={`display: flex; flex-direction: column; width: 100%; height: 100%; background-color: ${props.palette.background}; color: ${props.palette.text}; font-family: JetBrains Mono`}
     >
       <div
         style={`display: flex; height: 12px; background-color: ${props.palette.accent}`}
       />
       <div style='display: flex; flex-grow: 1; padding: 72px 80px 0 80px; overflow: hidden'>
-        <div style='display: block; font-size: 64px; font-weight: 700; line-height: 1.2; line-clamp: 3; text-overflow: ellipsis'>
+        <div style='display: block; font-size: 56px; font-weight: 700; line-height: 1.2; line-clamp: 4; text-overflow: ellipsis'>
           {props.title}
         </div>
       </div>

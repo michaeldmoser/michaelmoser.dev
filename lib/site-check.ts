@@ -259,9 +259,7 @@ function devOnlyProblems(paths: string[]): Problem[] {
 }
 
 function fontFaceBlocks(css: string): string[] {
-  return [...css.matchAll(/@font-face\s*\{[^}]*\}/gi)].map(
-    (match) => match[0]
-  )
+  return [...css.matchAll(/@font-face\s*\{[^}]*\}/gi)].map((match) => match[0])
 }
 
 function fontFaceUrls(block: string): string[] {
@@ -281,7 +279,12 @@ function declaredWoff2Paths(css: string): string[] {
 
 function fontFaceDescriptor(block: string, name: string): string | null {
   const match = block.match(new RegExp(`${name}\\s*:\\s*([^;}]+)`, 'i'))
-  return match ? match[1].trim().replace(/^["']|["']$/g, '').toLowerCase() : null
+  return match
+    ? match[1]
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .toLowerCase()
+    : null
 }
 
 function foreignFontHosts(css: string): string[] {
@@ -362,7 +365,10 @@ function iconLinkHrefs(html: string): string[] {
   return [...html.matchAll(/<link\s[^>]*>/gi)]
     .map((match) => match[0])
     .filter((tag) =>
-      (attributeValue(tag, 'rel') ?? '').toLowerCase().split(/\s+/).includes('icon')
+      (attributeValue(tag, 'rel') ?? '')
+        .toLowerCase()
+        .split(/\s+/)
+        .includes('icon')
     )
     .map((tag) => attributeValue(tag, 'href') ?? '')
 }

@@ -75,7 +75,7 @@ export default function base(data: {
           ) : null}
         </head>
         <body>
-          <Header items={navItems} />
+          <Header items={navItems} currentUrl={data.page.url} />
           <main>{html(data.content)}</main>
           <Footer contact={data.contact} />
         </body>

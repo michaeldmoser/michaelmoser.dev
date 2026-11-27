@@ -351,15 +351,7 @@ describe('style guide sample post', () => {
       )?.[0] ?? ''
     expect(article).not.toBe('')
 
-    for (const tag of [
-      'h2',
-      'h3',
-      'ul',
-      'ol',
-      'blockquote',
-      'table',
-      'pre'
-    ]) {
+    for (const tag of ['h2', 'h3', 'ul', 'ol', 'blockquote', 'table', 'pre']) {
       expect(article, tag).toMatch(new RegExp(`<${tag}\\b`))
     }
     expect(article).toMatch(/<p\b[^>]*>[^<]*<code\b|<li\b[^>]*>[^<]*<code\b/)

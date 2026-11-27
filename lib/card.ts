@@ -100,8 +100,18 @@ export async function renderCard(
     {
       ...cardSize,
       fonts: [
-        { name: 'Inter', data: fonts.regular, weight: 400, style: 'normal' },
-        { name: 'Inter', data: fonts.bold, weight: 700, style: 'normal' }
+        {
+          name: 'JetBrains Mono',
+          data: fonts.regular,
+          weight: 400,
+          style: 'normal'
+        },
+        {
+          name: 'JetBrains Mono',
+          data: fonts.bold,
+          weight: 700,
+          style: 'normal'
+        }
       ]
     }
   )

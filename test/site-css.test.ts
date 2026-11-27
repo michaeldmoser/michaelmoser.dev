@@ -106,20 +106,20 @@ describe('site css theme selection', () => {
   })
 
   const lightValues = {
-    '--color-text': '#1a1a1a',
-    '--color-surface': '#ffffff',
-    '--color-link': '#0b57d0',
-    '--color-accent': '#8a4b00',
-    '--color-focus': '#0a3d91',
-    '--color-border': '#767676'
+    '--color-text': '#4c4f69',
+    '--color-surface': '#eff1f5',
+    '--color-link': '#0b59f4',
+    '--color-accent': '#8534ef',
+    '--color-focus': '#b44201',
+    '--color-border': '#7c7f93'
   }
   const darkValues = {
-    '--color-text': '#e8e8e8',
-    '--color-surface': '#121212',
-    '--color-link': '#8ab4f8',
-    '--color-accent': '#f0b45c',
-    '--color-focus': '#b3d0ff',
-    '--color-border': '#8c8c8c'
+    '--color-text': '#cdd6f4',
+    '--color-surface': '#1e1e2e',
+    '--color-link': '#89b4fa',
+    '--color-accent': '#cba6f7',
+    '--color-focus': '#fab387',
+    '--color-border': '#6c7086'
   }
 
   it.each([

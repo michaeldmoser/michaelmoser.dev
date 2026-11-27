@@ -14,7 +14,7 @@ export function HeadIcons() {
           href={href}
           as='font'
           type='font/woff2'
-          crossorigin
+          crossorigin='anonymous'
         />
       ))}
     </>

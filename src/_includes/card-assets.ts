@@ -6,8 +6,8 @@ import { compileSiteCss } from './site-css.ts'
 const fontsDir = join(import.meta.dirname, 'fonts')
 
 export const fonts = {
-  regular: readFileSync(join(fontsDir, 'Inter-Regular.ttf')),
-  bold: readFileSync(join(fontsDir, 'Inter-Bold.ttf'))
+  regular: readFileSync(join(fontsDir, 'JetBrainsMono-Regular.ttf')),
+  bold: readFileSync(join(fontsDir, 'JetBrainsMono-Bold.ttf'))
 }
 
 export const palette = cardPalette(await compileSiteCss())

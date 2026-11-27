@@ -23,7 +23,7 @@ declare module '@11ty/eleventy' {
       name: string,
       callback: (collectionApi: CollectionApi) => unknown
     ): void
-    addPassthroughCopy(path: string): void
+    addPassthroughCopy(path: string | Record<string, string>): void
     addWatchTarget(path: string): void
     addTemplateFormats(formats: string): void
     addGlobalData(name: string, data: () => unknown): void
